@@ -1,0 +1,12 @@
+# Backend build output
+demo/target/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Common local files
+.DS_Store
+Thumbs.db
+*.log
