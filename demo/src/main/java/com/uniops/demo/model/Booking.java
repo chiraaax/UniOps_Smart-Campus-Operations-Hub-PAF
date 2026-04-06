@@ -1,11 +1,12 @@
 package com.uniops.demo.model;
 
-import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "bookings")
+@Document(collection = "bookings")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,49 +15,17 @@ import java.time.LocalDateTime;
 public class Booking {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String resourceName;
+    private String purpose;
+    private int attendees;
 
-    //  REPLACE resourceType and resourceName with Facility relationship
-    @ManyToOne
-    @JoinColumn(name = "facility_id", nullable = false)
-    private Facility facility;
-
-    @Column(nullable = false)
     private LocalDateTime startTime;
-
-    @Column(nullable = false)
     private LocalDateTime endTime;
 
-    private String purpose;
+    private String userId;
 
-    private Integer expectedAttendees;
-
-    @Enumerated(EnumType.STRING)
-    private BookingStatus status;
-
-    private String rejectionReason;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = BookingStatus.PENDING;
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    private String status; // PENDING, APPROVED, REJECTED, CANCELLED
+    private String adminReason;
 }

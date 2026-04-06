@@ -1,72 +1,66 @@
 package com.uniops.demo.service;
 
 import com.uniops.demo.model.Booking;
-import com.uniops.demo.model.BookingStatus;
 import com.uniops.demo.repository.BookingRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BookingService {
 
-    @Autowired
-    private BookingRepository bookingRepository;
+    private final BookingRepository bookingRepository;
 
+    // Create booking
+    public Booking createBooking(Booking booking) {
+
+        // Check conflicts
+        List<Booking> conflicts = bookingRepository
+                .findByResourceNameAndStartTimeLessThanAndEndTimeGreaterThan(
+                        booking.getResourceName(),
+                        booking.getEndTime(),
+                        booking.getStartTime()
+                );
+
+        if (!conflicts.isEmpty()) {
+            throw new RuntimeException("Time slot already booked!");
+        }
+
+        booking.setStatus("PENDING");
+        return bookingRepository.save(booking);
+    }
+
+    // Get user bookings
+    public List<Booking> getUserBookings(String userId) {
+        return bookingRepository.findByUserId(userId);
+    }
+
+    // Get all bookings (Admin)
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
 
-    public Optional<Booking> getBookingById(Long id) {
-        return bookingRepository.findById(id);
-    }
-
-    public Booking createBooking(Booking booking) {
-        if (booking.getStatus() == null) {
-            booking.setStatus(BookingStatus.PENDING);
-        }
+    // Approve
+    public Booking approveBooking(String id) {
+        Booking booking = bookingRepository.findById(id).orElseThrow();
+        booking.setStatus("APPROVED");
         return bookingRepository.save(booking);
     }
 
-    public Optional<Booking> updateBooking(Long id, Booking bookingDetails) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.setFacility(bookingDetails.getFacility());
-            booking.setStartTime(bookingDetails.getStartTime());
-            booking.setEndTime(bookingDetails.getEndTime());
-            booking.setPurpose(bookingDetails.getPurpose());
-            booking.setExpectedAttendees(bookingDetails.getExpectedAttendees());
-            booking.setStatus(bookingDetails.getStatus());
-            booking.setRejectionReason(bookingDetails.getRejectionReason());
-            return bookingRepository.save(booking);
-        });
+    // Reject
+    public Booking rejectBooking(String id, String reason) {
+        Booking booking = bookingRepository.findById(id).orElseThrow();
+        booking.setStatus("REJECTED");
+        booking.setAdminReason(reason);
+        return bookingRepository.save(booking);
     }
 
-    public boolean deleteBooking(Long id) {
-        if (bookingRepository.existsById(id)) {
-            bookingRepository.deleteById(id);
-            return true;
-        }
-        return false;
-    }
-
-    public Optional<Booking> updateBookingStatus(Long id, BookingStatus status) {
-        return bookingRepository.findById(id).map(booking -> {
-            booking.setStatus(status);
-            return bookingRepository.save(booking);
-        });
-    }
-
-    public List<Booking> getBookingsByStatus(BookingStatus status) {
-        return bookingRepository.findByStatus(status);
-    }
-
-    public List<Booking> getBookingsByUser(Long userId) {
-        return bookingRepository.findByUserId(userId);
-    }
-
-    public List<Booking> getBookingsByFacility(Long facilityId) {
-        return bookingRepository.findByFacilityId(facilityId);
+    // Cancel
+    public Booking cancelBooking(String id) {
+        Booking booking = bookingRepository.findById(id).orElseThrow();
+        booking.setStatus("CANCELLED");
+        return bookingRepository.save(booking);
     }
 }

@@ -1,18 +1,19 @@
 package com.uniops.demo.repository;
 
 import com.uniops.demo.model.Booking;
-import com.uniops.demo.model.BookingStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Repository
-public interface BookingRepository extends JpaRepository<Booking, Long> {
+public interface BookingRepository extends MongoRepository<Booking, String> {
 
-    List<Booking> findByStatus(BookingStatus status);
+    List<Booking> findByUserId(String userId);
 
-    List<Booking> findByUserId(Long userId);
-
-    List<Booking> findByFacilityId(Long facilityId);
+    // Check overlapping bookings
+    List<Booking> findByResourceNameAndStartTimeLessThanAndEndTimeGreaterThan(
+            String resourceName,
+            LocalDateTime endTime,
+            LocalDateTime startTime
+    );
 }
