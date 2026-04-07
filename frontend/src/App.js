@@ -1,8 +1,9 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import BookingForm from "./components/BookingForm";
 import BookingStatus from "./components/BookingStatus";
-import Navbar from "./components/Navbar";   
+import BookingCalendar from "./components/BookingCalendar";
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 function App() {
@@ -18,6 +19,8 @@ function App() {
           <Routes>
             <Route path="/" element={<BookingForm />} />
             <Route path="/status" element={<BookingStatus />} />
+            <Route path="/calendar" element={<BookingCalendar />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Calendar, Users, FileText, Box, CheckCircle, XCircle, Clock, X } from "lucide-react";
+import { CheckCircle, XCircle, Clock, X } from "lucide-react";
 
 const BookingStatus = () => {
   const [bookings, setBookings] = useState([]);

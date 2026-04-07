@@ -14,7 +14,7 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <div className="flex gap-4">
+        <div className="flex gap-2">
           <Link
             to="/"
             className={`px-4 py-2 rounded-lg font-semibold transition ${
@@ -34,6 +34,16 @@ const Navbar = () => {
             }`}
           >
             📋 My Bookings
+          </Link>
+          <Link
+            to="/calendar"
+            className={`px-4 py-2 rounded-lg font-semibold transition ${
+              location.pathname === '/calendar'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            📈 Calendar
           </Link>
         </div>
       </div>
