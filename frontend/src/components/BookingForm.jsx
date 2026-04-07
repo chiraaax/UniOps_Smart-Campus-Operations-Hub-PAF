@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { Calendar, Users, FileText, Box } from "lucide-react";
 
@@ -17,100 +18,142 @@ const BookingForm = () => {
 
     try {
       const res = await axios.post("http://localhost:8080/api/bookings", form);
-      alert("Booking Created!");
+      alert("Booking Created Successfully!");
       console.log(res.data);
+
+      setForm({
+        resourceName: "",
+        purpose: "",
+        attendees: 0,
+        startTime: "",
+        endTime: "",
+        userId: "1"
+      });
     } catch (err) {
       alert("Error: " + (err.response?.data || err.message));
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-800 p-6">
-      
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex items-center justify-center p-6">
+
+      {/* Background Image Overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-20"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f')"
+        }}
+      ></div>
+
+      {/* Glass Card */}
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl space-y-6"
+        className="relative z-10 w-full max-w-4xl backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-10 text-white"
       >
         {/* Title */}
-        <h2 className="text-3xl font-bold text-center text-white tracking-wide">
-          📅 Book Resource
-        </h2>
-        <p className="text-center text-slate-300 text-sm">
-          Reserve rooms, labs, or equipment easily
-        </p>
-
-        {/* Resource */}
-        <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-slate-700 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition">
-          <Box className="text-emerald-400" size={18} />
-          <input
-            placeholder="Resource Name"
-            className="bg-transparent w-full outline-none text-white placeholder-gray-400"
-            onChange={(e) =>
-              setForm({ ...form, resourceName: e.target.value })
-            }
-          />
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold tracking-wide">
+            Resource Booking
+          </h1>
+          <p className="text-blue-200 mt-2">
+            Smart Campus Operations Hub
+          </p>
         </div>
 
-        {/* Purpose */}
-        <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-slate-700 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition">
-          <FileText className="text-emerald-400" size={18} />
-          <input
-            placeholder="Purpose"
-            className="bg-transparent w-full outline-none text-white placeholder-gray-400"
-            onChange={(e) =>
-              setForm({ ...form, purpose: e.target.value })
-            }
-          />
+        {/* Grid */}
+        <div className="grid md:grid-cols-2 gap-6">
+
+          {/* Resource Name */}
+          <div className="relative">
+            <Box className="absolute left-3 top-3 text-blue-300" />
+            <input
+              type="text"
+              placeholder="Resource Name"
+              className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 placeholder-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+              value={form.resourceName}
+              onChange={(e) =>
+                setForm({ ...form, resourceName: e.target.value })
+              }
+              required
+            />
+          </div>
+
+          {/* Purpose */}
+          <div className="relative">
+            <FileText className="absolute left-3 top-3 text-blue-300" />
+            <input
+              type="text"
+              placeholder="Purpose"
+              className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 placeholder-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+              value={form.purpose}
+              onChange={(e) =>
+                setForm({ ...form, purpose: e.target.value })
+              }
+              required
+            />
+          </div>
+
+          {/* Attendees */}
+          <div className="relative">
+            <Users className="absolute left-3 top-3 text-blue-300" />
+            <input
+              type="number"
+              placeholder="Attendees"
+              className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 placeholder-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+              value={form.attendees}
+              onChange={(e) =>
+                setForm({ ...form, attendees: parseInt(e.target.value) || 0 })
+              }
+              required
+            />
+          </div>
+
+          {/* Start Time */}
+          <div className="relative">
+            <Calendar className="absolute left-3 top-3 text-blue-300" />
+            <input
+              type="datetime-local"
+              className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 text-white focus:ring-2 focus:ring-blue-400 outline-none"
+              value={form.startTime}
+              onChange={(e) =>
+                setForm({ ...form, startTime: e.target.value })
+              }
+              required
+            />
+          </div>
+
+          {/* End Time */}
+          <div className="relative md:col-span-2">
+            <Calendar className="absolute left-3 top-3 text-blue-300" />
+            <input
+              type="datetime-local"
+              className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 text-white focus:ring-2 focus:ring-blue-400 outline-none"
+              value={form.endTime}
+              onChange={(e) =>
+                setForm({ ...form, endTime: e.target.value })
+              }
+              required
+            />
+          </div>
         </div>
 
-        {/* Attendees */}
-        <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-slate-700 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition">
-          <Users className="text-emerald-400" size={18} />
-          <input
-            type="number"
-            placeholder="Number of Attendees"
-            className="bg-transparent w-full outline-none text-white placeholder-gray-400"
-            onChange={(e) =>
-              setForm({ ...form, attendees: e.target.value })
-            }
-          />
+        {/* Buttons */}
+        <div className="flex gap-4 mt-8">
+          <button
+            type="submit"
+            className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:scale-105 transition transform rounded-lg font-bold shadow-lg"
+          >
+            Submit Booking
+          </button>
+
+          <Link
+            to="/status"
+            className="flex-1 py-3 bg-gray-700 hover:bg-gray-800 rounded-lg text-center font-bold"
+          >
+            View Bookings
+          </Link>
         </div>
-
-        {/* Start Time */}
-        <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-slate-700 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition">
-          <Calendar className="text-emerald-400" size={18} />
-          <input
-            type="datetime-local"
-            className="bg-transparent w-full outline-none text-white"
-            onChange={(e) =>
-              setForm({ ...form, startTime: e.target.value })
-            }
-          />
-        </div>
-
-        {/* End Time */}
-        <div className="flex items-center gap-3 bg-slate-800/60 p-3 rounded-xl border border-slate-700 focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400 transition">
-          <Calendar className="text-emerald-400" size={18} />
-          <input
-            type="datetime-local"
-            className="bg-transparent w-full outline-none text-white"
-            onChange={(e) =>
-              setForm({ ...form, endTime: e.target.value })
-            }
-          />
-        </div>
-
-        {/* Button */}
-        <button
-          type="submit"
-          className="w-full py-3 rounded-xl font-semibold text-white 
-          bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500
-          hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/40
-          transition duration-300 ease-in-out"
-        >
-          🚀 Book Now
-        </button>
-
       </form>
     </div>
   );

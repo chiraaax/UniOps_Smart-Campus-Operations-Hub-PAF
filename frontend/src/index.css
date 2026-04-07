@@ -5,63 +5,87 @@
 /* ===== Global Styles ===== */
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(to bottom right, #2563eb, #1e3a8a, #020617);
-  color: #ffffff;
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f3f4f6;
+  color: #1f2937;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===== Smooth Transitions ===== */
 * {
-  transition: all 0.25s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
 /* ===== Glass Effect Utility ===== */
 .glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
 /* ===== Input Styling Enhancement ===== */
 input {
   font-size: 14px;
+  font-family: inherit;
 }
 
 input::placeholder {
-  color: #bfdbfe; /* light blue */
+  color: #9ca3af; /* medium gray */
 }
 
 /* Focus effect */
 input:focus {
   outline: none;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
 }
 
 /* ===== Button Enhancements ===== */
 button {
   cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
 }
 
-/* ===== Scrollbar (Modern Blue Style) ===== */
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+  transform: translateY(0px);
+}
+
+/* ===== Scrollbar (Light Blue Style) ===== */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #f3f4f6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #3b82f6, #6366f1);
+  background: #cbd5e1;
   border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* ===== Autofill Fix (Chrome) ===== */
 input:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0px 1000px rgba(30, 58, 138, 0.9) inset;
-  -webkit-text-fill-color: white;
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  -webkit-text-fill-color: #1f2937;
+}
+
+input:-webkit-autofill::first-line {
+  font-family: inherit;
 }
 
 /* ===== Optional Card Hover Effect ===== */
@@ -70,6 +94,42 @@ input:-webkit-autofill {
 }
 
 .card-hover:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Link Styles ===== */
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* ===== Selection Styles ===== */
+::selection {
+  background-color: #2563eb;
+  color: white;
+}
+
+::-moz-selection {
+  background-color: #2563eb;
+  color: white;
+}
+
+/* ===== Form Reset ===== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+textarea,
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
