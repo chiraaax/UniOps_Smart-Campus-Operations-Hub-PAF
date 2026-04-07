@@ -28,4 +28,5 @@ public class Booking {
 
     private String status; // PENDING, APPROVED, REJECTED, CANCELLED
     private String adminReason;
+    private String qrCodeData; // Base64 encoded QR code image
 }

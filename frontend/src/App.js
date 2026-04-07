@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import BookingForm from "./components/BookingForm";
 import BookingStatus from "./components/BookingStatus";
 import BookingCalendar from "./components/BookingCalendar";
+import AdminBookings from "./components/AdminBookings";
+import AdminVerification from "./components/AdminVerification";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -20,6 +22,8 @@ function App() {
             <Route path="/" element={<BookingForm />} />
             <Route path="/status" element={<BookingStatus />} />
             <Route path="/calendar" element={<BookingCalendar />} />
+            <Route path="/admin" element={<AdminBookings />} />
+            <Route path="/admin/verify" element={<AdminVerification />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
