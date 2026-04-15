@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import BookingForm from "./components/BookingForm";
 import BookingStatus from "./components/BookingStatus";
 import BookingCalendar from "./components/BookingCalendar";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 
 function App() {
