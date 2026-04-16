@@ -1,12 +1,11 @@
 package com.uniops.demo.repository;
 
-import com.uniops.demo.model.Facility;
+import com.uniops.demo.entity.Facility;
 import com.uniops.demo.enums.FacilityType;
 import com.uniops.demo.enums.ResourceStatus;
 import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-@Repository
 public interface FacilityRepository extends MongoRepository<Facility, String> {
 
     List<Facility> findByFacilityType(FacilityType type);
