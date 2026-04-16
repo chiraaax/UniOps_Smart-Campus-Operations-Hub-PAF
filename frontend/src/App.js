@@ -1,9 +1,13 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./components/Dashboard";
 import BookingForm from "./components/BookingForm";
 import BookingStatus from "./components/BookingStatus";
 import BookingCalendar from "./components/BookingCalendar";
-import Navbar from "./components/Navbar";
+import SignIn from "./components/SignIn";
+import SignUp from "./components/SignUp";
+import Profile from "./components/Profile";
+import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 
 function App() {
@@ -17,10 +21,28 @@ function App() {
         {/* Main Content */}
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<BookingForm />} />
+            {/* Dashboard as the main landing page */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            
+            {/* User Profile Page */}
+            <Route path="/profile" element={<Profile />} />
+            
+            {/* Separate Booking Page */}
+            <Route path="/booking" element={<BookingForm />} />
+            
+            {/* Auth Pages */}
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            
+            {/* Other routes */}
             <Route path="/status" element={<BookingStatus />} />
             <Route path="/calendar" element={<BookingCalendar />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            
+            {/* Redirect root to dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            {/* 404 Redirect */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
 
