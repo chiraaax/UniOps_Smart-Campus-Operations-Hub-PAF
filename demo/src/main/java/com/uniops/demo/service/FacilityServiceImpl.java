@@ -126,4 +126,3 @@ public class FacilityServiceImpl implements FacilityService {
         return modelMapper.map(facility, FacilityResponseDTO.class);
     }
 }
-
