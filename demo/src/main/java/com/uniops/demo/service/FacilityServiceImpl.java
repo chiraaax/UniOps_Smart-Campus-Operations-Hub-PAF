@@ -2,7 +2,7 @@ package com.uniops.demo.service;
 
 import com.uniops.demo.dto.facility.FacilityRequestDTO;
 import com.uniops.demo.dto.facility.FacilityResponseDTO;
-import com.uniops.demo.model.Facility;
+import com.uniops.demo.entity.Facility;
 import com.uniops.demo.enums.FacilityType;
 import com.uniops.demo.enums.ResourceStatus;
 import com.uniops.demo.exception.ResourceNotFoundException;
