@@ -7,6 +7,8 @@ import BookingCalendar from "./components/BookingCalendar";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import Profile from "./components/Profile";
+import AdminDashboard from "./components/AdminDashboard";
+import TechnicianDashboard from "./components/TechnicianDashboard";
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 
@@ -23,6 +25,10 @@ function App() {
           <Routes>
             {/* Dashboard as the main landing page */}
             <Route path="/dashboard" element={<Dashboard />} />
+            
+            {/* Admin & Technician Dashboards */}
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/technician-dashboard" element={<TechnicianDashboard />} />
             
             {/* User Profile Page */}
             <Route path="/profile" element={<Profile />} />
