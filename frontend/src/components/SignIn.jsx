@@ -1,22 +1,30 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
 
 const SignIn = () => {
-  const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+    setError("");
+
     try {
-      const response = await fetch("http://localhost:8080/api/auth/signin", {
+      const response = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -25,80 +33,182 @@ const SignIn = () => {
       });
 
       if (response.ok) {
-        const userData = await response.json();
-        // Store user data in localStorage for persistence
-        localStorage.setItem("user", JSON.stringify(userData));
-        alert("Sign-in Successful!");
-        navigate("/dashboard");
+        const data = await response.json();
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        // Role-based redirection
+        if (data.user.role === "ADMIN") {
+          navigate("/admin-dashboard");
+        } else if (data.user.role === "TECHNICIAN") {
+          navigate("/technician-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         const errorMsg = await response.text();
-        alert(errorMsg || "Invalid email or password!");
+        setError(errorMsg || "Login failed");
       }
-    } catch (error) {
-      console.error("Sign-in error:", error);
-      alert("An error occurred. Please make sure the backend is running.");
+    } catch (err) {
+      setError("Connection to backend failed");
     } finally {
       setLoading(false);
     }
   };
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch("http://localhost:8080/api/auth/google-login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: tokenResponse.access_token }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+
+          // Role-based redirection
+          if (data.user.role === "ADMIN") {
+            navigate("/admin-dashboard");
+          } else if (data.user.role === "TECHNICIAN") {
+            navigate("/technician-dashboard");
+          } else {
+            navigate("/dashboard");
+          }
+        } else {
+          const errorMsg = await response.text();
+          setError(errorMsg || "Login failed");
+        }
+      } catch (err) {
+        setError("Connection to backend failed");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => setError("Google Login Failed"),
+  });
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 to-white">
-      
-      {/* Glass Card */}
-      <div className="backdrop-blur-lg bg-white/30 border border-white/40 shadow-xl rounded-2xl p-8 w-[350px] text-center">
-
-        {/* Icon */}
-        <div className="w-10 h-10 mx-auto mb-4 flex items-center justify-center rounded-full bg-white/60">
-          🔐
-        </div>
-
-        {/* Title */}
-        <h2 className="text-lg font-semibold text-gray-800">
-          Sign in with email
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Sign In
         </h2>
-        <p className="text-sm text-gray-600 mt-1 mb-5">
-          Access your UniOps Hub account
-        </p>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3 text-left">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
-            required
-          />
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 p-2 bg-red-100 border border-red-400 text-red-700 text-center text-sm font-medium rounded">
+              {error}
+            </div>
+          )}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
-            required
-          />
+          <form onSubmit={handleLogin} className="space-y-4 mb-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
 
-          {/* Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {loading ? "Signing In..." : "Get Started"}
-          </button>
-        </form>
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={formData.password}
+                onChange={handleInputChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+            </div>
 
-        <p className="text-xs text-gray-500 mt-6 text-center">
-          Don't have an account? <Link to="/signup" className="text-blue-600 hover:underline">Sign Up</Link>
-        </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <button
+              onClick={() => googleLogin()}
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <img
+                className="h-5 w-5 mr-2"
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google"
+              />
+              Continue with Google
+            </button>
+
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  New to UniOps?
+                </span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <Link
+                to="/signup"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                Create an account
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default SignIn;
+

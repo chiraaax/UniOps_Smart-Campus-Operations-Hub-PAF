@@ -19,15 +19,3 @@ public interface FacilityRepository extends MongoRepository<Facility, String> {
     List<Facility> findByCapacityGreaterThanEqual(Integer minCapacity);
 }
 
-@Repository
-public interface FacilityRepository extends MongoRepository<Facility, String> {
-
-    List<Facility> findByFacilityType(FacilityType type);
-
-    List<Facility> findByStatus(ResourceStatus status);
-
-    List<Facility> findByLocationContainingIgnoreCase(String location);
-
-    List<Facility> findByCapacityGreaterThanEqual(Integer minCapacity);
-}
-
