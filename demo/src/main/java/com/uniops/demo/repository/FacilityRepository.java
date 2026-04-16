@@ -1,6 +1,6 @@
 package com.uniops.demo.repository;
 
-import com.uniops.demo.entity.Facility;
+import com.uniops.demo.model.Facility;
 import com.uniops.demo.enums.FacilityType;
 import com.uniops.demo.enums.ResourceStatus;
 import java.util.List;

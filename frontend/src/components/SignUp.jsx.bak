@@ -1,0 +1,130 @@
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+
+const SignUp = () => {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    idNumber: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const navigate = useNavigate();
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+
+    alert("Account Created Successfully! (Demo)");
+    navigate("/signin");
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-200 to-white">
+      
+      {/* Glass Card */}
+      <div className="backdrop-blur-lg bg-white/30 border border-white/40 shadow-xl rounded-2xl p-8 w-[380px] text-center">
+
+        {/* Icon */}
+        <div className="w-10 h-10 mx-auto mb-4 flex items-center justify-center rounded-full bg-white/60">
+          ✨
+        </div>
+
+        {/* Title */}
+        <h2 className="text-lg font-semibold text-gray-800">
+          Create your account
+        </h2>
+        <p className="text-sm text-gray-600 mt-1 mb-5">
+          Join and start managing everything in one place
+        </p>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3 text-left">
+          
+          <input
+            type="text"
+            name="fullName"
+            placeholder="Full Name"
+            value={formData.fullName}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
+            required
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
+            required
+          />
+
+          <input
+            type="text"
+            name="idNumber"
+            placeholder="Student / Faculty ID"
+            value={formData.idNumber}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
+            required
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
+              required
+            />
+
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 rounded-md bg-white/70 border border-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-400"
+              required
+            />
+          </div>
+
+          {/* Button */}
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800 transition mt-2"
+          >
+            Get Started
+          </button>
+        </form>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Already have an account?{" "}
+          <Link
+            to="/signin"
+            className="text-gray-900 font-medium hover:underline"
+          >
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default SignUp;
