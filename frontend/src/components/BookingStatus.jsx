@@ -1,20 +1,35 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle, XCircle, Clock, X, Download, QrCode } from "lucide-react";
 
 const BookingStatus = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      alert("Please sign in to view your bookings.");
+      navigate("/signin");
+      return;
+    }
+
+    setUser(JSON.parse(savedUser));
+  }, [navigate]);
+
+  useEffect(() => {
+    if (user) {
+      fetchBookings();
+    }
+  }, [user]);
 
   const fetchBookings = async () => {
     try {
-      // For demo purposes, using userId "1". In a real app, this would come from authentication
-      const response = await axios.get("http://localhost:8080/api/bookings/user/1");
+      const response = await axios.get(`http://localhost:8080/api/bookings/user/${user.id}`);
       setBookings(response.data);
       setLoading(false);
     } catch (err) {

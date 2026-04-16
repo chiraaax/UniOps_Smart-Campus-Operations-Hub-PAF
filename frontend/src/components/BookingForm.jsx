@@ -5,19 +5,31 @@ import { Calendar, Users, FileText, Box, ArrowLeft, Send } from "lucide-react";
 
 const BookingForm = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [form, setForm] = useState({
     resourceName: "",
     purpose: "",
     attendees: 0,
     startTime: "",
     endTime: "",
-    userId: "1"
+    userId: ""
   });
   const [facilities, setFacilities] = useState([]);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
   const [facilityError, setFacilityError] = useState("");
 
   useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      alert("Please sign in to book resources.");
+      navigate("/signin");
+      return;
+    }
+
+    const parsedUser = JSON.parse(savedUser);
+    setUser(parsedUser);
+    setForm((prev) => ({ ...prev, userId: parsedUser.id || "" }));
+
     const fetchFacilities = async () => {
       try {
         const response = await axios.get(
@@ -39,7 +51,7 @@ const BookingForm = () => {
     };
 
     fetchFacilities();
-  }, []);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
