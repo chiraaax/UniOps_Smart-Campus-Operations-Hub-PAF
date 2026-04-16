@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   ChevronLeft,
@@ -24,6 +25,7 @@ import {
 const BookingCalendar = () => {
   console.log("BookingCalendar component rendered");
 
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState("month"); // "month" or "week"
   const [bookings, setBookings] = useState([]);
@@ -31,16 +33,29 @@ const BookingCalendar = () => {
   const [error, setError] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    console.log("useEffect triggered, calling fetchBookings");
-    fetchBookings();
-  }, []);
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      alert("Please sign in to view your calendar.");
+      navigate("/signin");
+      return;
+    }
+    setUser(JSON.parse(savedUser));
+  }, [navigate]);
+
+  useEffect(() => {
+    if (user) {
+      console.log("useEffect triggered, calling fetchBookings");
+      fetchBookings();
+    }
+  }, [user]);
 
   const fetchBookings = async () => {
     try {
       console.log("Fetching bookings...");
-      const response = await axios.get("http://localhost:8080/api/bookings/user/1");
+      const response = await axios.get(`http://localhost:8080/api/bookings/user/${user.id}`);
       console.log("Bookings response:", response.data);
       setBookings(response.data);
       setLoading(false);

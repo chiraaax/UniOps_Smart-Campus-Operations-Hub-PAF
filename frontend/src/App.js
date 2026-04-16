@@ -4,6 +4,8 @@ import Dashboard from "./components/Dashboard";
 import BookingForm from "./components/BookingForm";
 import BookingStatus from "./components/BookingStatus";
 import BookingCalendar from "./components/BookingCalendar";
+import AdminBookings from "./components/AdminBookings";
+import AdminVerification from "./components/AdminVerification";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import Profile from "./components/Profile";
@@ -43,6 +45,9 @@ function App() {
             {/* Other routes */}
             <Route path="/status" element={<BookingStatus />} />
             <Route path="/calendar" element={<BookingCalendar />} />
+            <Route path="/admin" element={<AdminBookings />} />
+            <Route path="/admin/verify" element={<AdminVerification />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
             
             {/* Redirect root to dashboard */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
