@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Calendar, Users, FileText, Box, ArrowLeft, Send } from "lucide-react";
@@ -13,6 +13,33 @@ const BookingForm = () => {
     endTime: "",
     userId: "1"
   });
+  const [facilities, setFacilities] = useState([]);
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
+  const [facilityError, setFacilityError] = useState("");
+
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/v1/facilities?page=0&size=100&sort=name,asc"
+        );
+        const facilityList = response.data?.content || [];
+        setFacilities(facilityList);
+
+        if (!form.resourceName && facilityList.length > 0) {
+          setForm((prev) => ({ ...prev, resourceName: facilityList[0].name }));
+        }
+      } catch (err) {
+        setFacilityError(
+          "Unable to load facility list: " + (err.response?.data || err.message)
+        );
+      } finally {
+        setIsLoadingFacilities(false);
+      }
+    };
+
+    fetchFacilities();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,16 +105,42 @@ const BookingForm = () => {
             {/* Resource Name */}
             <div className="relative">
               <Box className="absolute left-3 top-3 text-blue-300" />
-              <input
-                type="text"
-                placeholder="Resource Name (e.g. Lab A)"
-                className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 placeholder-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
-                value={form.resourceName}
-                onChange={(e) =>
-                  setForm({ ...form, resourceName: e.target.value })
-                }
-                required
-              />
+              {facilities.length > 0 ? (
+                <select
+                  className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 text-white focus:ring-2 focus:ring-blue-400 outline-none"
+                  value={form.resourceName}
+                  onChange={(e) =>
+                    setForm({ ...form, resourceName: e.target.value })
+                  }
+                  required
+                >
+                  <option value="" disabled>
+                    {isLoadingFacilities
+                      ? "Loading facilities..."
+                      : "Select a facility resource"}
+                  </option>
+                  {facilities.map((facility) => (
+                    <option key={facility.id} value={facility.name}>
+                      {facility.name}
+                      {facility.location ? ` — ${facility.location}` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Resource Name (e.g. Lab A)"
+                  className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 placeholder-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+                  value={form.resourceName}
+                  onChange={(e) =>
+                    setForm({ ...form, resourceName: e.target.value })
+                  }
+                  required
+                />
+              )}
+              {facilityError && (
+                <p className="mt-2 text-sm text-red-300">{facilityError}</p>
+              )}
             </div>
 
             {/* Purpose */}
