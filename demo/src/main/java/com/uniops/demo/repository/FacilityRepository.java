@@ -19,12 +19,15 @@ public interface FacilityRepository extends MongoRepository<Facility, String> {
     List<Facility> findByCapacityGreaterThanEqual(Integer minCapacity);
 }
 
-=======
-import com.uniops.demo.model.Facility;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
-
 @Repository
 public interface FacilityRepository extends MongoRepository<Facility, String> {
+
+    List<Facility> findByFacilityType(FacilityType type);
+
+    List<Facility> findByStatus(ResourceStatus status);
+
+    List<Facility> findByLocationContainingIgnoreCase(String location);
+
+    List<Facility> findByCapacityGreaterThanEqual(Integer minCapacity);
 }
->>>>>>> janaka--user-login-and-notification-system
+
