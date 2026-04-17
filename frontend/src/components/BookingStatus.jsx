@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle, XCircle, Clock, X, Download, QrCode } from "lucide-react";
@@ -21,22 +21,24 @@ const BookingStatus = () => {
     setUser(JSON.parse(savedUser));
   }, [navigate]);
 
-  useEffect(() => {
-    if (user) {
-      fetchBookings();
-    }
-  }, [user]);
+  const fetchBookings = useCallback(async () => {
+    if (!user?.id) return;
 
-  const fetchBookings = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/bookings/user/${user.id}`);
+      const response = await axios.get(
+        `http://localhost:8080/api/bookings/user/${user.id}`
+      );
       setBookings(response.data);
       setLoading(false);
     } catch (err) {
       setError("Failed to load bookings");
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -71,11 +73,15 @@ const BookingStatus = () => {
   const handleCancel = async (bookingId) => {
     if (window.confirm("Are you sure you want to cancel this booking?")) {
       try {
-        await axios.put(`http://localhost:8080/api/bookings/${bookingId}/cancel`);
+        await axios.put(
+          `http://localhost:8080/api/bookings/${bookingId}/cancel`
+        );
         fetchBookings(); // Refresh the list
         alert("Booking cancelled successfully!");
       } catch (err) {
-        alert("Failed to cancel booking: " + (err.response?.data || err.message));
+        alert(
+          "Failed to cancel booking: " + (err.response?.data || err.message)
+        );
       }
     }
   };
@@ -83,7 +89,9 @@ const BookingStatus = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-gray-800 text-xl font-semibold">Loading bookings...</div>
+        <div className="text-gray-800 text-xl font-semibold">
+          Loading bookings...
+        </div>
       </div>
     );
   }
@@ -102,7 +110,9 @@ const BookingStatus = () => {
         {/* Header */}
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">My Bookings</h1>
-          <p className="text-gray-600">View and manage all your resource bookings</p>
+          <p className="text-gray-600">
+            View and manage all your resource bookings
+          </p>
           <div className="h-1 w-24 bg-blue-600 mt-4 rounded"></div>
         </div>
 
@@ -124,11 +134,17 @@ const BookingStatus = () => {
                 className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden"
               >
                 {/* Status Header */}
-                <div className={`px-6 py-4 border-b-2 ${getStatusColor(booking.status)}`}>
+                <div
+                  className={`px-6 py-4 border-b-2 ${getStatusColor(
+                    booking.status
+                  )}`}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(booking.status)}
-                      <span className="font-bold text-sm">{booking.status}</span>
+                      <span className="font-bold text-sm">
+                        {booking.status}
+                      </span>
                     </div>
                     {booking.status === "APPROVED" && (
                       <button
@@ -145,36 +161,56 @@ const BookingStatus = () => {
                 <div className="p-6 space-y-4">
                   {/* Resource Name */}
                   <div>
-                    <p className="text-gray-500 text-xs font-semibold uppercase">Resource</p>
-                    <p className="text-gray-800 font-semibold">{booking.resourceName}</p>
+                    <p className="text-gray-500 text-xs font-semibold uppercase">
+                      Resource
+                    </p>
+                    <p className="text-gray-800 font-semibold">
+                      {booking.resourceName}
+                    </p>
                   </div>
 
                   {/* Purpose */}
                   <div>
-                    <p className="text-gray-500 text-xs font-semibold uppercase">Purpose</p>
+                    <p className="text-gray-500 text-xs font-semibold uppercase">
+                      Purpose
+                    </p>
                     <p className="text-gray-800">{booking.purpose}</p>
                   </div>
 
                   {/* Attendees */}
                   <div>
-                    <p className="text-gray-500 text-xs font-semibold uppercase">Attendees</p>
+                    <p className="text-gray-500 text-xs font-semibold uppercase">
+                      Attendees
+                    </p>
                     <p className="text-gray-800">{booking.attendees} people</p>
                   </div>
 
                   {/* Dates */}
                   <div>
-                    <p className="text-gray-500 text-xs font-semibold uppercase">Duration</p>
+                    <p className="text-gray-500 text-xs font-semibold uppercase">
+                      Duration
+                    </p>
                     <div className="text-sm text-gray-800 space-y-1">
-                      <p><strong>From:</strong> {new Date(booking.startTime).toLocaleString()}</p>
-                      <p><strong>To:</strong> {new Date(booking.endTime).toLocaleString()}</p>
+                      <p>
+                        <strong>From:</strong>{" "}
+                        {new Date(booking.startTime).toLocaleString()}
+                      </p>
+                      <p>
+                        <strong>To:</strong>{" "}
+                        {new Date(booking.endTime).toLocaleString()}
+                      </p>
                     </div>
                   </div>
 
                   {/* Admin Reason */}
                   {booking.adminReason && (
                     <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-600 rounded">
-                      <p className="text-red-700 text-xs font-bold uppercase">Admin Note</p>
-                      <p className="text-red-700 text-sm mt-1">{booking.adminReason}</p>
+                      <p className="text-red-700 text-xs font-bold uppercase">
+                        Admin Note
+                      </p>
+                      <p className="text-red-700 text-sm mt-1">
+                        {booking.adminReason}
+                      </p>
                     </div>
                   )}
 
@@ -183,7 +219,9 @@ const BookingStatus = () => {
                     <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
                       <div className="flex items-center gap-2 mb-3">
                         <QrCode className="text-green-600" size={16} />
-                        <p className="text-green-700 text-xs font-bold uppercase">Check-in QR Code</p>
+                        <p className="text-green-700 text-xs font-bold uppercase">
+                          Check-in QR Code
+                        </p>
                       </div>
                       <div className="flex flex-col items-center space-y-3">
                         <img
@@ -193,7 +231,7 @@ const BookingStatus = () => {
                         />
                         <button
                           onClick={() => {
-                            const link = document.createElement('a');
+                            const link = document.createElement("a");
                             link.href = `data:image/png;base64,${booking.qrCodeData}`;
                             link.download = `booking-${booking.id}-qrcode.png`;
                             link.click();
@@ -205,7 +243,8 @@ const BookingStatus = () => {
                         </button>
                       </div>
                       <p className="text-xs text-green-600 mt-2 text-center">
-                        Present this QR code at the facility entrance for check-in
+                        Present this QR code at the facility entrance for
+                        check-in
                       </p>
                     </div>
                   )}

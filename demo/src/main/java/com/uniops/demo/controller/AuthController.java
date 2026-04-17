@@ -5,6 +5,9 @@ import com.uniops.demo.dto.LoginRequest;
 import com.uniops.demo.model.User;
 import com.uniops.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -89,8 +92,14 @@ public class AuthController {
         try {
             // 1. Verify token and get user info from Google
             RestTemplate restTemplate = new RestTemplate();
-            Map<String, Object> googleResponse = restTemplate.getForObject(
-                    GOOGLE_USERINFO_URL + "?access_token=" + accessToken, Map.class);
+            ResponseEntity<Map<String, Object>> googleResponseEntity = restTemplate.exchange(
+                GOOGLE_USERINFO_URL + "?access_token=" + accessToken,
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Map<String, Object>>() {
+                }
+            );
+            Map<String, Object> googleResponse = googleResponseEntity.getBody();
 
             if (googleResponse == null || !googleResponse.containsKey("email")) {
                 return ResponseEntity.status(401).body("Error: Invalid Google token");
