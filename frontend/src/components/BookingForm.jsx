@@ -5,14 +5,13 @@ import { Calendar, Users, FileText, Box, ArrowLeft, Send } from "lucide-react";
 
 const BookingForm = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [form, setForm] = useState({
     resourceName: "",
     purpose: "",
     attendees: 0,
     startTime: "",
     endTime: "",
-    userId: ""
+    userId: "",
   });
   const [facilities, setFacilities] = useState([]);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
@@ -27,7 +26,6 @@ const BookingForm = () => {
     }
 
     const parsedUser = JSON.parse(savedUser);
-    setUser(parsedUser);
     setForm((prev) => ({ ...prev, userId: parsedUser.id || "" }));
 
     const fetchFacilities = async () => {
@@ -38,9 +36,12 @@ const BookingForm = () => {
         const facilityList = response.data?.content || [];
         setFacilities(facilityList);
 
-        if (!form.resourceName && facilityList.length > 0) {
-          setForm((prev) => ({ ...prev, resourceName: facilityList[0].name }));
-        }
+        setForm((prev) => {
+          if (!prev.resourceName && facilityList.length > 0) {
+            return { ...prev, resourceName: facilityList[0].name };
+          }
+          return prev;
+        });
       } catch (err) {
         setFacilityError(
           "Unable to load facility list: " + (err.response?.data || err.message)
@@ -67,9 +68,9 @@ const BookingForm = () => {
         attendees: 0,
         startTime: "",
         endTime: "",
-        userId: "1"
+        userId: form.userId,
       });
-      navigate('/status');
+      navigate("/status");
     } catch (err) {
       alert("Error: " + (err.response?.data || err.message));
     }
@@ -77,20 +78,19 @@ const BookingForm = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 flex flex-col items-center justify-center p-6 pt-24">
-
       {/* Background Image Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none"
         style={{
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f')"
+            "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f')",
         }}
       ></div>
 
       <div className="w-full max-w-4xl relative z-10">
         {/* Back Button */}
-        <button 
-          onClick={() => navigate('/dashboard')} 
+        <button
+          onClick={() => navigate("/dashboard")}
           className="mb-6 flex items-center gap-2 text-blue-300 hover:text-white transition-colors"
         >
           <ArrowLeft size={20} /> Back to Dashboard
@@ -113,7 +113,6 @@ const BookingForm = () => {
 
           {/* Grid */}
           <div className="grid md:grid-cols-2 gap-6">
-
             {/* Resource Name */}
             <div className="relative">
               <Box className="absolute left-3 top-3 text-blue-300" />
@@ -163,9 +162,7 @@ const BookingForm = () => {
                 placeholder="Purpose of Booking"
                 className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 placeholder-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
                 value={form.purpose}
-                onChange={(e) =>
-                  setForm({ ...form, purpose: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, purpose: e.target.value })}
                 required
               />
             </div>
@@ -206,13 +203,10 @@ const BookingForm = () => {
                 type="datetime-local"
                 className="w-full pl-10 p-3 rounded-lg bg-white/20 border border-white/30 text-white focus:ring-2 focus:ring-blue-400 outline-none"
                 value={form.endTime}
-                onChange={(e) =>
-                  setForm({ ...form, endTime: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, endTime: e.target.value })}
                 required
               />
             </div>
-
           </div>
 
           {/* Submit */}

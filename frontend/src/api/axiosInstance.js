@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
+  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api/v1",
 });
 
 axiosInstance.interceptors.request.use(
@@ -20,7 +20,7 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if ([401, 403].includes(error?.response?.status)) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      window.location.href = "/signin";
     }
     return Promise.reject(error);
   }
