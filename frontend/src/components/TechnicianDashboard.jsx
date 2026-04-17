@@ -1,45 +1,81 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const TechnicianDashboard = () => {
+    const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const userStr = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
     const user = userStr ? JSON.parse(userStr) : null;
+
+    const axiosConfig = useMemo(() => ({
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    }), [token]);
 
     const fetchTasks = useCallback(async () => {
         if (!user || !user.id) return;
         try {
-            const res = await axios.get(`http://localhost:8080/api/technician/tasks/${user.id}`);
+            const res = await axios.get(`http://localhost:8080/api/technician/tasks/${user.id}`, axiosConfig);
             setTasks(res.data);
         } catch (err) {
             console.error("Error fetching technician tasks", err);
+            if (err.response?.status === 403) {
+                alert("Unauthorized: Technician access required");
+                navigate("/signin");
+            }
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, axiosConfig, navigate]);
 
     useEffect(() => {
-        if (user && user.id) {
-            fetchTasks();
+        // Check if user is authorized
+        if (!user || !token) {
+            navigate("/signin");
+            return;
         }
-    }, [fetchTasks, user]);
+
+        if (user.role !== "TECHNICIAN" && user.role !== "ADMIN") {
+            alert("Unauthorized: Technician access required");
+            navigate("/dashboard");
+            return;
+        }
+
+        fetchTasks();
+    }, [user, token, fetchTasks, navigate]);
 
     const handleComplete = async (taskId) => {
         try {
-            await axios.put(`http://localhost:8080/api/technician/complete/${taskId}`);
+            await axios.put(`http://localhost:8080/api/technician/complete/${taskId}`, {}, axiosConfig);
             fetchTasks();
             alert("Task marked as completed!");
         } catch (err) {
-            alert("Error updating task");
+            if (err.response?.status === 403) {
+                alert("Unauthorized: Cannot complete this task");
+            } else {
+                alert("Error updating task");
+            }
         }
     };
 
-    if (!user || user.role !== "TECHNICIAN") return <div className="p-10 text-center">Access Denied</div>;
+    if (!user || (user.role !== "TECHNICIAN" && user.role !== "ADMIN")) {
+        return <div className="p-10 text-center text-red-600 font-semibold">Access Denied: Technician access required</div>;
+    }
     if (loading) return <div className="p-10 text-center">Loading Tasks...</div>;
 
     return (
         <div className="p-8 pt-24 bg-white min-h-screen">
+            {user.status === "PENDING" && (
+                <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg font-medium">
+                    ⚠️ Your account is pending administrator approval. You can use the dashboard but will have full access once approved.
+                </div>
+            )}
+            
             <h1 className="text-2xl font-bold mb-6 text-gray-800">Technician Dashboard</h1>
             <p className="mb-4 text-gray-600">Welcome, {user.name}. Here are your assigned tasks.</p>
             

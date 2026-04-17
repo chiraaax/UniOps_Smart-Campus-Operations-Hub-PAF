@@ -37,6 +37,11 @@ const SignIn = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        // Show pending message if present
+        if (data.message) {
+          alert(data.message);
+        }
+
         // Role-based redirection
         if (data.user.role === "ADMIN") {
           navigate("/admin-dashboard");
@@ -73,6 +78,11 @@ const SignIn = () => {
           const data = await response.json();
           localStorage.setItem("token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
+
+          // Show pending message if present
+          if (data.message) {
+            alert(data.message);
+          }
 
           // Role-based redirection
           if (data.user.role === "ADMIN") {

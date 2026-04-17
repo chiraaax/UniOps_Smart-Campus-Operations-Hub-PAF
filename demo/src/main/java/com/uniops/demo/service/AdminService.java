@@ -46,8 +46,6 @@ public class AdminService {
     }
 
     public List<User> getAllTechnicians() {
-        return userRepository.findAll().stream()
-                .filter(user -> "TECHNICIAN".equals(user.getRole()))
-                .collect(Collectors.toList());
+        return userRepository.findByRoleAndStatus("TECHNICIAN", "APPROVED");
     }
 }

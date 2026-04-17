@@ -60,12 +60,13 @@ public class AuthController {
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
                 
-                // For ADMIN or TECHNICIAN, we might want to allow normal password login
                 // Check if password exists and matches
                 if (user.getPassword() != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
                     
-                    if (!"APPROVED".equals(user.getStatus())) {
-                        return ResponseEntity.status(403).body("Error: Your account is " + user.getStatus());
+                    // Allow login for APPROVED users
+                    // Also allow PENDING technicians to login (they can use the app but need admin approval for full access)
+                    if ("REJECTED".equals(user.getStatus())) {
+                        return ResponseEntity.status(403).body("Error: Your account has been rejected. Please contact administrator.");
                     }
 
                     String jwt = jwtUtils.generateToken(user.getEmail(), user.getRole());
@@ -73,6 +74,12 @@ public class AuthController {
                     Map<String, Object> response = new HashMap<>();
                     response.put("token", jwt);
                     response.put("user", user);
+                    
+                    // Add warning message if account is pending
+                    if ("PENDING".equals(user.getStatus())) {
+                        response.put("message", "Your account is pending administrator approval. Full access will be granted once approved.");
+                    }
+                    
                     return ResponseEntity.ok(response);
                 }
             }

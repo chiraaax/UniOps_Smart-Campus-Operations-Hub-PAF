@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -17,6 +19,13 @@ public class AdminController {
 
     private final AdminService adminService;
     private final com.uniops.demo.repository.UserRepository userRepository;
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "Admin API is running");
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/pending-tasks")
     public ResponseEntity<List<Task>> getPendingTasks() {
@@ -45,7 +54,10 @@ public class AdminController {
 
     @GetMapping("/pending-technicians")
     public ResponseEntity<List<User>> getPendingTechnicians() {
-        return ResponseEntity.ok(userRepository.findByRoleAndStatus("TECHNICIAN", "PENDING"));
+        System.out.println("Fetching pending technicians from repository...");
+        List<User> pending = userRepository.findByRoleAndStatus("TECHNICIAN", "PENDING");
+        System.out.println("Found " + pending.size() + " pending technicians");
+        return ResponseEntity.ok(pending);
     }
 
     @PutMapping("/approve-tech/{id}")
