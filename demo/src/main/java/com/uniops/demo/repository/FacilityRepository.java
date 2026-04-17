@@ -5,6 +5,7 @@ import com.uniops.demo.enums.FacilityType;
 import com.uniops.demo.enums.ResourceStatus;
 import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface FacilityRepository extends MongoRepository<Facility, String> {

@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { CheckCircle, XCircle, Search, Camera } from 'lucide-react';
+import jsQR from 'jsqr';
+import { CheckCircle, XCircle, Search, Camera, Upload } from 'lucide-react';
 
 const AdminVerification = () => {
   const [qrContent, setQrContent] = useState('');
   const [verificationResult, setVerificationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [manualBookingId, setManualBookingId] = useState('');
+  const [scanError, setScanError] = useState('');
+  const [scannedImage, setScannedImage] = useState(null);
 
   const handleVerify = async (content) => {
     if (!content.trim()) {
@@ -43,6 +46,46 @@ const AdminVerification = () => {
     handleVerify(mockQrContent);
   };
 
+  const handleImageUpload = async (event) => {
+    setScanError('');
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageSrc = reader.result;
+      setScannedImage(imageSrc);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const context = canvas.getContext('2d');
+        if (!context) {
+          setScanError('Failed to get canvas context');
+          return;
+        }
+        context.drawImage(img, 0, 0, img.width, img.height);
+        const imageData = context.getImageData(0, 0, img.width, img.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code?.data) {
+          setQrContent(code.data);
+          handleVerify(code.data);
+        } else {
+          setScanError('No QR code found in the selected image. Please try another image.');
+        }
+      };
+      img.onerror = () => setScanError('Unable to load the selected image.');
+      img.src = imageSrc;
+    };
+    reader.onerror = () => setScanError('Failed to read image file.');
+    reader.readAsDataURL(file);
+  };
+
   const resetVerification = () => {
     setVerificationResult(null);
     setQrContent('');
@@ -69,6 +112,29 @@ const AdminVerification = () => {
               <h3 className="text-lg font-medium">Scan QR Code</h3>
             </div>
             <form onSubmit={handleQrSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload QR Code Image
+                </label>
+                <label className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-gray-300 px-4 py-10 text-center text-sm text-gray-500 hover:border-blue-500 hover:text-blue-600">
+                  <Upload size={20} className="mr-2" />
+                  <span>Choose an image file containing a QR code</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+                {scanError && (
+                  <p className="mt-2 text-sm text-red-600">{scanError}</p>
+                )}
+                {scannedImage && (
+                  <div className="mt-4 rounded-lg border border-gray-200 overflow-hidden">
+                    <img src={scannedImage} alt="Uploaded QR" className="w-full object-contain" />
+                  </div>
+                )}
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   QR Code Content

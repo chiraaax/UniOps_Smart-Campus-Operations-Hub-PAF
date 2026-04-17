@@ -16,4 +16,6 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
             LocalDateTime endTime,
             LocalDateTime startTime
     );
+
+    List<Booking> findByResourceNameAndStartTimeBetween(String resourceName, LocalDateTime start, LocalDateTime end);
 }

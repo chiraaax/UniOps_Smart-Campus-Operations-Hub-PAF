@@ -80,9 +80,9 @@ const NavBar = () => {
             <UserPlus size={18} /> Sign Up
           </Link>
           <Link
-            to="/admin"
+            to="/admin/bookings"
             className={`px-4 py-2 rounded-lg font-semibold transition ${
-              location.pathname === '/admin'
+              location.pathname === '/admin/bookings'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
             }`}
