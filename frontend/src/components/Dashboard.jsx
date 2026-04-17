@@ -1,6 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { LayoutDashboard, Calendar, ClipboardList, LogIn, UserPlus, BookOpen } from 'lucide-react';
 
 const Dashboard = () => {
   return (

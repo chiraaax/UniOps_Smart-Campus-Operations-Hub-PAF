@@ -44,7 +44,11 @@ const SignUp = () => {
       });
 
       if (response.ok) {
-        alert("Account Created Successfully!");
+        if (formData.role === "TECHNICIAN") {
+            alert("Registration Successful! Your technician account is pending administrator approval. You will be able to log in once approved.");
+        } else {
+            alert("Account Created Successfully!");
+        }
         navigate("/signin");
       } else {
         const errorData = await response.text();

@@ -18,4 +18,7 @@ public class User {
     private String password;
     private String role; // e.g., STUDENT, ADMIN, TECHNICIAN
     private String department;
+    private String status; // PENDING, APPROVED, REJECTED (for Technicians)
+    private String profilePicture;
+    private String googleId;
 }

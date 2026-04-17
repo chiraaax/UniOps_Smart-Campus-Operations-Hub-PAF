@@ -2,6 +2,7 @@ package com.uniops.demo.controller;
 
 import com.uniops.demo.model.Booking;
 import com.uniops.demo.service.BookingService;
+import com.uniops.demo.service.QrCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final QrCodeService qrCodeService;
 
     // Create booking
     @PostMapping
@@ -49,5 +51,11 @@ public class BookingController {
     @PutMapping("/{id}/cancel")
     public Booking cancel(@PathVariable String id) {
         return bookingService.cancelBooking(id);
+    }
+
+    // Verify QR Code
+    @PostMapping("/verify")
+    public QrCodeService.BookingVerificationResult verifyBooking(@RequestBody String qrContent) {
+        return qrCodeService.verifyBooking(qrContent);
     }
 }

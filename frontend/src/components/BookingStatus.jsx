@@ -1,20 +1,35 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { CheckCircle, XCircle, Clock, X } from "lucide-react";
+import { CheckCircle, XCircle, Clock, X, Download, QrCode } from "lucide-react";
 
 const BookingStatus = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    const savedUser = localStorage.getItem("user");
+    if (!savedUser) {
+      alert("Please sign in to view your bookings.");
+      navigate("/signin");
+      return;
+    }
+
+    setUser(JSON.parse(savedUser));
+  }, [navigate]);
+
+  useEffect(() => {
+    if (user) {
+      fetchBookings();
+    }
+  }, [user]);
 
   const fetchBookings = async () => {
     try {
-      // For demo purposes, using userId "1". In a real app, this would come from authentication
-      const response = await axios.get("http://localhost:8080/api/bookings/user/1");
+      const response = await axios.get(`http://localhost:8080/api/bookings/user/${user.id}`);
       setBookings(response.data);
       setLoading(false);
     } catch (err) {
@@ -160,6 +175,38 @@ const BookingStatus = () => {
                     <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-600 rounded">
                       <p className="text-red-700 text-xs font-bold uppercase">Admin Note</p>
                       <p className="text-red-700 text-sm mt-1">{booking.adminReason}</p>
+                    </div>
+                  )}
+
+                  {/* QR Code for Approved Bookings */}
+                  {booking.status === "APPROVED" && booking.qrCodeData && (
+                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
+                      <div className="flex items-center gap-2 mb-3">
+                        <QrCode className="text-green-600" size={16} />
+                        <p className="text-green-700 text-xs font-bold uppercase">Check-in QR Code</p>
+                      </div>
+                      <div className="flex flex-col items-center space-y-3">
+                        <img
+                          src={`data:image/png;base64,${booking.qrCodeData}`}
+                          alt="Booking QR Code"
+                          className="w-32 h-32 border border-gray-300 rounded"
+                        />
+                        <button
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = `data:image/png;base64,${booking.qrCodeData}`;
+                            link.download = `booking-${booking.id}-qrcode.png`;
+                            link.click();
+                          }}
+                          className="flex items-center gap-2 text-green-600 hover:text-green-800 text-sm font-medium"
+                        >
+                          <Download size={14} />
+                          Download QR Code
+                        </button>
+                      </div>
+                      <p className="text-xs text-green-600 mt-2 text-center">
+                        Present this QR code at the facility entrance for check-in
+                      </p>
                     </div>
                   )}
                 </div>
