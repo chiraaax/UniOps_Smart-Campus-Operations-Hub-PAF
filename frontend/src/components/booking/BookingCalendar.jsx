@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from '../../utils/config';
+import { getAuthHeaders } from '../../utils/helpers';
 import {
   ChevronLeft,
   ChevronRight,
@@ -47,9 +49,11 @@ const BookingCalendar = () => {
     if (!user?.id) return;
 
     try {
-      const response = await axios.get(
-        `http://localhost:8080/api/bookings/user/${user.id}`
-      );
+      console.log("Fetching bookings...");
+      const response = await axios.get(`${API_BASE_URL}/api/bookings/user/${user.id}`, {
+        headers: getAuthHeaders(),
+      });
+      console.log("Bookings response:", response.data);
       setBookings(response.data);
       setLoading(false);
     } catch (err) {

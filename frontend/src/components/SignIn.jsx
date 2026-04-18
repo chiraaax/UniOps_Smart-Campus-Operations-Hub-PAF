@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
+import { API_BASE_URL, ENABLE_GOOGLE_AUTH } from "../utils/config";
 
 const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
   const navigate = useNavigate();
+  const apiBaseUrl = API_BASE_URL;
 
   const handleInputChange = (e) => {
     setFormData({
@@ -24,7 +26,7 @@ const SignIn = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/login", {
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,7 +49,7 @@ const SignIn = () => {
         }
       } else {
         const errorMsg = await response.text();
-        setError(errorMsg || "Login failed");
+        setError(errorMsg || "Invalid username/email or password");
       }
     } catch (err) {
       setError("Connection to backend failed");
@@ -56,44 +58,48 @@ const SignIn = () => {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await fetch("http://localhost:8080/api/auth/google-login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: tokenResponse.access_token }),
-        });
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError("");
 
-        if (response.ok) {
-          const data = await response.json();
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("user", JSON.stringify(data.user));
+    const token = credentialResponse?.credential;
+    if (!token) {
+      setError("Google Login Failed");
+      setLoading(false);
+      return;
+    }
 
-          // Role-based redirection
-          if (data.user.role === "ADMIN") {
-            navigate("/admin-dashboard");
-          } else if (data.user.role === "TECHNICIAN") {
-            navigate("/technician-dashboard");
-          } else {
-            navigate("/dashboard");
-          }
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/google-login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        if (data.user.role === "ADMIN") {
+          navigate("/admin-dashboard");
+        } else if (data.user.role === "TECHNICIAN") {
+          navigate("/technician-dashboard");
         } else {
-          const errorMsg = await response.text();
-          setError(errorMsg || "Login failed");
+          navigate("/dashboard");
         }
-      } catch (err) {
-        setError("Connection to backend failed");
-      } finally {
-        setLoading(false);
+      } else {
+        const errorMsg = await response.text();
+        setError(errorMsg || "Login failed");
       }
-    },
-    onError: () => setError("Google Login Failed"),
-  });
+    } catch (err) {
+      setError("Connection to backend failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -112,20 +118,25 @@ const SignIn = () => {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4 mb-6">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              <strong>Admin login:</strong> use username <code>admin</code> or email <code>admin@university.edu</code> with password <code>admin123</code>.
+            </div>
+
             <div>
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="block text-sm font-medium text-gray-700"
               >
-                Email address
+                Email or Username
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="identifier"
+                name="identifier"
+                type="text"
+                autoComplete="username"
+                placeholder="Enter email or username"
                 required
-                value={formData.email}
+                value={formData.identifier}
                 onChange={handleInputChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
@@ -159,32 +170,30 @@ const SignIn = () => {
             </button>
           </form>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
           <div className="space-y-6">
-            <button
-              onClick={() => googleLogin()}
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <img
-                className="h-5 w-5 mr-2"
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                alt="Google"
-              />
-              Continue with Google
-            </button>
+            {ENABLE_GOOGLE_AUTH && (
+              <>
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
 
-            <div className="relative mt-6">
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError("Google Login Failed")}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className={ENABLE_GOOGLE_AUTH ? "relative mt-6" : "relative"}>
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
@@ -211,4 +220,7 @@ const SignIn = () => {
 };
 
 export default SignIn;
+
+
+
 

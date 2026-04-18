@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,18 +38,37 @@ public class AuthController {
     @org.springframework.beans.factory.annotation.Value("${app.auth.admin.password}")
     private String adminPassword;
 
-    private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
+            String identifier = loginRequest.getIdentifier();
+            if (identifier == null || identifier.isBlank()) {
+                identifier = loginRequest.getEmail(); // backward compatibility
+            }
+
+            if (identifier == null || identifier.isBlank() ||
+                    loginRequest.getPassword() == null || loginRequest.getPassword().isBlank()) {
+                return ResponseEntity.badRequest().body("Error: Identifier and password are required");
+            }
+
+            String normalizedIdentifier = identifier.trim();
+            String adminAlias = adminUsername != null && adminUsername.contains("@")
+                    ? adminUsername.substring(0, adminUsername.indexOf('@'))
+                    : adminUsername;
+
             // Check for Super Admin from properties
-            if (adminUsername.equals(loginRequest.getEmail()) && adminPassword.equals(loginRequest.getPassword())) {
+            if ((adminUsername.equalsIgnoreCase(normalizedIdentifier) ||
+                    (adminAlias != null && adminAlias.equalsIgnoreCase(normalizedIdentifier)))
+                    && adminPassword.equals(loginRequest.getPassword())) {
                 Map<String, Object> response = new HashMap<>();
                 String jwt = jwtUtils.generateToken(adminUsername, "ADMIN");
                 
                 User adminUser = new User();
                 adminUser.setEmail(adminUsername);
+                adminUser.setUsername(adminAlias);
                 adminUser.setName("System Admin");
                 adminUser.setRole("ADMIN");
                 adminUser.setStatus("APPROVED");
@@ -58,7 +78,12 @@ public class AuthController {
                 return ResponseEntity.ok(response);
             }
 
-            Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
+            Optional<User> userOptional;
+            if (EMAIL_PATTERN.matcher(normalizedIdentifier).matches()) {
+                userOptional = userRepository.findByEmail(normalizedIdentifier);
+            } else {
+                userOptional = userRepository.findByUsername(normalizedIdentifier);
+            }
             
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
@@ -87,19 +112,17 @@ public class AuthController {
 
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> request) {
-        String accessToken = request.get("token");
+        String idToken = request.get("token");
+
+        if (idToken == null || idToken.isBlank()) {
+            return ResponseEntity.badRequest().body("Error: Missing Google token");
+        }
 
         try {
-            // 1. Verify token and get user info from Google
+            // 1. Verify the ID token with Google's tokeninfo endpoint
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<Map<String, Object>> googleResponseEntity = restTemplate.exchange(
-                GOOGLE_USERINFO_URL + "?access_token=" + accessToken,
-                HttpMethod.GET,
-                HttpEntity.EMPTY,
-                new ParameterizedTypeReference<Map<String, Object>>() {
-                }
-            );
-            Map<String, Object> googleResponse = googleResponseEntity.getBody();
+            Map<String, Object> googleResponse = restTemplate.getForObject(
+                    "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken, Map.class);
 
             if (googleResponse == null || !googleResponse.containsKey("email")) {
                 return ResponseEntity.status(401).body("Error: Invalid Google token");
@@ -115,14 +138,14 @@ public class AuthController {
                 User newUser = new User();
                 newUser.setEmail(email);
                 newUser.setName(name);
+                newUser.setUsername(generateUsernameFromEmail(email));
                 newUser.setProfilePicture(picture);
                 newUser.setGoogleId(sub);
                 newUser.setRole("STUDENT"); // Default role
-                newUser.setStatus("APPROVED"); // Correctly set approved status
+                newUser.setStatus("APPROVED"); // Approved by default for Google users
                 return userRepository.save(newUser);
             });
 
-            // 3. Check status (and handle potential null from existing users)
             if (user.getStatus() == null) {
                 user.setStatus("APPROVED");
                 userRepository.save(user);
@@ -131,13 +154,12 @@ public class AuthController {
                 return ResponseEntity.status(403).body("Error: Your account is " + user.getStatus());
             }
 
-            // 4. Generate JWT
+            // 3. Generate JWT
             String jwt = jwtUtils.generateToken(user.getEmail(), user.getRole());
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", jwt);
             response.put("user", user);
-            
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -147,13 +169,25 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody User user) {
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
+            return ResponseEntity.badRequest().body("Error: Username is required!");
+        }
+
         if (userRepository.existsByEmail(user.getEmail())) {
             return ResponseEntity.badRequest().body("Error: Email is already in use!");
+        }
+
+        if (userRepository.existsByUsername(user.getUsername())) {
+            return ResponseEntity.badRequest().body("Error: Username is already in use!");
         }
 
         // Set default values
         if (user.getRole() == null) {
             user.setRole("STUDENT");
+        }
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+            return ResponseEntity.status(403).body("Error: Admin accounts cannot be created via sign up");
         }
 
         // Technicians need approval
@@ -170,5 +204,20 @@ public class AuthController {
 
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully!");
+    }
+
+    private String generateUsernameFromEmail(String email) {
+        String base = email.split("@")[0].replaceAll("[^a-zA-Z0-9._-]", "");
+        if (base.isBlank()) {
+            base = "user";
+        }
+
+        String candidate = base;
+        int suffix = 1;
+        while (userRepository.existsByUsername(candidate)) {
+            candidate = base + suffix;
+            suffix++;
+        }
+        return candidate;
     }
 }

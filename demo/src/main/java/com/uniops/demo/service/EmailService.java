@@ -1,6 +1,8 @@
 package com.uniops.demo.service;
 
 import com.uniops.demo.model.Booking;
+import com.uniops.demo.model.User;
+import com.uniops.demo.model.WaitlistEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -93,6 +95,28 @@ public class EmailService {
             booking.getAdminReason()
         ));
 
+        mailSender.send(message);
+    }
+
+    public void sendWaitlistNotificationEmail(User user, WaitlistEntry entry) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmail());
+        message.setSubject("Waitlist Slot Available - Smart Campus Operations Hub");
+        message.setText(String.format(
+            "Dear %s,\n\n" +
+            "A slot you joined on the waitlist is now available for booking.\n\n" +
+            "Resource: %s\n" +
+            "Time: %s to %s\n" +
+            "You have 2 hours to claim this slot.\n" +
+            "If you do not claim within 2 hours, the next person in the queue will be notified.\n\n" +
+            "Visit the Smart Campus portal to claim the slot.\n\n" +
+            "Best regards,\n" +
+            "Smart Campus Operations Hub Admin",
+            user.getName(),
+            entry.getResourceName(),
+            entry.getStartTime(),
+            entry.getEndTime()
+        ));
         mailSender.send(message);
     }
 

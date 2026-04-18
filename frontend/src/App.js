@@ -6,15 +6,15 @@ import {
   Navigate,
 } from "react-router-dom";
 import Dashboard from "./components/Dashboard";
-import BookingForm from "./components/BookingForm";
-import BookingStatus from "./components/BookingStatus";
-import BookingCalendar from "./components/BookingCalendar";
-import AdminBookings from "./components/AdminBookings";
-import AdminVerification from "./components/AdminVerification";
+import BookingForm from "./components/booking/BookingForm";
+import BookingStatus from "./components/booking/BookingStatus";
+import BookingCalendar from "./components/booking/BookingCalendar";
+import AdminBookings from "./components/booking/AdminBookings";
+import AdminVerification from "./components/booking/AdminVerification";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import Profile from "./components/Profile";
-import AdminDashboard from "./components/AdminDashboard";
+import AdminDashboard from "./components/booking/AdminDashboard";
 import TechnicianDashboard from "./components/TechnicianDashboard";
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
@@ -58,7 +58,8 @@ function App() {
             {/* Other routes */}
             <Route path="/status" element={<BookingStatus />} />
             <Route path="/calendar" element={<BookingCalendar />} />
-            <Route path="/admin" element={<AdminBookings />} />
+            <Route path="/admin" element={<Navigate to="/admin/bookings" replace />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/verify" element={<AdminVerification />} />
             <Route path="/facilities" element={<FacilitiesListPage />} />
             <Route path="/facilities/new" element={<FacilityFormPage />} />

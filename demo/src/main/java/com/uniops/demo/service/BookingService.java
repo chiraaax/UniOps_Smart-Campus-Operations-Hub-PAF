@@ -1,10 +1,15 @@
 package com.uniops.demo.service;
 
+import com.uniops.demo.dto.booking.AvailabilityResponse;
 import com.uniops.demo.model.Booking;
 import com.uniops.demo.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -14,6 +19,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final EmailService emailService;
     private final QrCodeService qrCodeService;
+    private final WaitlistService waitlistService;
 
     // Create booking
     public Booking createBooking(Booking booking) {
@@ -42,6 +48,40 @@ public class BookingService {
     // Get all bookings (Admin)
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
+    }
+
+    public AvailabilityResponse checkAvailability(String resourceName, LocalDateTime startTime, LocalDateTime endTime, String userId) {
+        List<Booking> conflicts = bookingRepository.findByResourceNameAndStartTimeLessThanAndEndTimeGreaterThan(
+                resourceName, endTime, startTime
+        );
+        boolean available = conflicts.isEmpty();
+        List<String> nextSlots = new ArrayList<>();
+
+        LocalDateTime dayStart = startTime.toLocalDate().atStartOfDay();
+        LocalDateTime dayEnd = startTime.toLocalDate().atTime(23, 59, 59);
+        List<Booking> dayBookings = bookingRepository.findByResourceNameAndStartTimeBetween(resourceName, dayStart, dayEnd);
+        dayBookings.sort(Comparator.comparing(Booking::getStartTime));
+
+        LocalDateTime candidate = startTime;
+        for (int i = 0; nextSlots.size() < 3 && !candidate.isAfter(dayEnd); i++) {
+            LocalDateTime candidateStart = candidate;
+            LocalDateTime candidateEnd = candidateStart.plusMinutes(30);
+            boolean overlap = dayBookings.stream().anyMatch(existing ->
+                    existing.getStartTime().isBefore(candidateEnd) && existing.getEndTime().isAfter(candidateStart)
+            );
+            if (!overlap) {
+                nextSlots.add(candidateStart.toLocalTime() + " - " + candidateEnd.toLocalTime());
+            }
+            candidate = candidate.plusMinutes(30);
+        }
+
+        int position = 0;
+        boolean canJoinWaitlist = !available && userId != null && !userId.isBlank();
+        if (canJoinWaitlist) {
+            position = waitlistService.getWaitlistPosition(userId, resourceName, startTime, endTime);
+        }
+
+        return new AvailabilityResponse(available, nextSlots, canJoinWaitlist, position);
     }
 
     // Approve
@@ -110,6 +150,12 @@ public class BookingService {
         Booking booking = bookingRepository.findById(id).orElseThrow();
         booking.setStatus("CANCELLED");
         booking.setQrCodeData(null); // Clear QR code for cancelled bookings
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        try {
+            waitlistService.notifyNextWaitlistEntry(booking.getResourceName(), booking.getStartTime(), booking.getEndTime());
+        } catch (Exception e) {
+            System.err.println("Failed to notify waitlist after cancellation: " + e.getMessage());
+        }
+        return savedBooking;
     }
 }

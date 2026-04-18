@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from 'react';
+import apiClient from '../../utils/api';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -7,6 +7,11 @@ const AdminBookings = () => {
   const [error, setError] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectingId, setRejectingId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [resourceFilter, setResourceFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [startDateFilter, setStartDateFilter] = useState('');
+  const [endDateFilter, setEndDateFilter] = useState('');
 
   useEffect(() => {
     fetchBookings();
@@ -15,7 +20,7 @@ const AdminBookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8080/api/bookings');
+      const response = await apiClient.get('/api/bookings');
       setBookings(response.data);
       setError(null);
     } catch (err) {
@@ -28,7 +33,7 @@ const AdminBookings = () => {
 
   const handleApprove = async (bookingId) => {
     try {
-      await axios.put(`http://localhost:8080/api/bookings/${bookingId}/approve`);
+      await apiClient.put(`/api/bookings/${bookingId}/approve`);
       // Update local state
       setBookings(bookings.map(booking =>
         booking.id === bookingId
@@ -47,7 +52,7 @@ const AdminBookings = () => {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/bookings/${bookingId}/reject`, null, {
+      await apiClient.put(`/api/bookings/${bookingId}/reject`, null, {
         params: { reason: rejectReason.trim() }
       });
       // Update local state
@@ -61,6 +66,31 @@ const AdminBookings = () => {
     } catch (err) {
       alert('Failed to reject booking: ' + (err.response?.data?.message || err.message));
     }
+  };
+
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((booking) => {
+      const matchesStatus = statusFilter ? booking.status === statusFilter : true;
+      const matchesResource = resourceFilter
+        ? booking.resourceName?.toLowerCase().includes(resourceFilter.toLowerCase())
+        : true;
+      const matchesUser = userFilter
+        ? booking.userId?.toString().toLowerCase().includes(userFilter.toLowerCase())
+        : true;
+      const bookingStart = new Date(booking.startTime);
+      const afterStartDate = startDateFilter ? bookingStart >= new Date(startDateFilter) : true;
+      const beforeEndDate = endDateFilter ? bookingStart <= new Date(endDateFilter) : true;
+
+      return matchesStatus && matchesResource && matchesUser && afterStartDate && beforeEndDate;
+    });
+  }, [bookings, statusFilter, resourceFilter, userFilter, startDateFilter, endDateFilter]);
+
+  const resetFilters = () => {
+    setStatusFilter('');
+    setResourceFilter('');
+    setUserFilter('');
+    setStartDateFilter('');
+    setEndDateFilter('');
   };
 
   const getStatusColor = (status) => {
@@ -97,6 +127,77 @@ const AdminBookings = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-center mb-8">Admin - Booking Management</h1>
 
+      <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+        <div className="bg-gray-50 px-6 py-5 border-b border-gray-200">
+          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-lg border-gray-300 text-sm bg-white"
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Resource</label>
+              <input
+                type="text"
+                value={resourceFilter}
+                onChange={(e) => setResourceFilter(e.target.value)}
+                placeholder="Search resource"
+                className="w-full rounded-lg border-gray-300 text-sm bg-white px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">User ID</label>
+              <input
+                type="text"
+                value={userFilter}
+                onChange={(e) => setUserFilter(e.target.value)}
+                placeholder="Search user"
+                className="w-full rounded-lg border-gray-300 text-sm bg-white px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+              <input
+                type="date"
+                value={startDateFilter}
+                onChange={(e) => setStartDateFilter(e.target.value)}
+                className="w-full rounded-lg border-gray-300 text-sm bg-white px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+              <input
+                type="date"
+                value={endDateFilter}
+                onChange={(e) => setEndDateFilter(e.target.value)}
+                className="w-full rounded-lg border-gray-300 text-sm bg-white px-3 py-2"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4">
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Reset Filters
+            </button>
+            <p className="text-sm text-gray-500">
+              Showing {filteredBookings.length} of {bookings.length} bookings
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -126,7 +227,7 @@ const AdminBookings = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {bookings.map((booking) => (
+              {filteredBookings.map((booking) => (
                 <tr key={booking.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {booking.resourceName}
@@ -208,9 +309,11 @@ const AdminBookings = () => {
           </table>
         </div>
 
-        {bookings.length === 0 && (
+        {filteredBookings.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No bookings found
+            {bookings.length === 0
+              ? 'No bookings found'
+              : 'No bookings match the current filters.'}
           </div>
         )}
       </div>

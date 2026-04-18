@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Calendar, Users, FileText, Box, ArrowLeft, Send } from "lucide-react";
+import { API_BASE_URL } from "../../utils/config";
 
 const BookingForm = () => {
   const navigate = useNavigate();
@@ -26,12 +27,26 @@ const BookingForm = () => {
     }
 
     const parsedUser = JSON.parse(savedUser);
-    setForm((prev) => ({ ...prev, userId: parsedUser.id || "" }));
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Your session has expired. Please sign in again.");
+      navigate("/signin");
+      return;
+    }
+
+    const resolvedUserId = parsedUser.id || parsedUser._id || "";
+    setForm((prev) => ({ ...prev, userId: resolvedUserId }));
 
     const fetchFacilities = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/v1/facilities?page=0&size=100&sort=name,asc"
+          `${API_BASE_URL}/api/v1/facilities?page=0&size=100&sort=name,asc`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const facilityList = response.data?.content || [];
         setFacilities(facilityList);
@@ -58,7 +73,18 @@ const BookingForm = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post("http://localhost:8080/api/bookings", form);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Your session has expired. Please sign in again.");
+        navigate("/signin");
+        return;
+      }
+
+      const res = await axios.post(`${API_BASE_URL}/api/bookings`, form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       alert("Booking Created Successfully!");
       console.log(res.data);
 
@@ -68,7 +94,7 @@ const BookingForm = () => {
         attendees: 0,
         startTime: "",
         endTime: "",
-        userId: form.userId,
+        userId: form.userId
       });
       navigate("/status");
     } catch (err) {

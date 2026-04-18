@@ -67,3 +67,8 @@ export const buildSearchParams = (filters) => {
 
   return Object.fromEntries(entries);
 };
+
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
