@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import bookingService from '../../services/bookingService';
+import { useNavigate } from 'react-router-dom';
 
 const StudentBookings = () => {
     const { user } = useContext(AuthContext);
+    const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -80,6 +82,28 @@ const StudentBookings = () => {
                                         style={{ backgroundColor: 'transparent', color: '#dc3545', border: '1px solid #dc3545', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                                         Cancel Request
                                     </button>
+                                )}
+
+                                {/* NEW INCIDENT BUTTONS FOR APPROVED BOOKINGS */}
+                                {booking.status === 'APPROVED' && (
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '5px' }}>
+                                        <button 
+                                            onClick={() => navigate('/incidents/new?resourceId=' + booking.facilityId)}
+                                            style={{ backgroundColor: '#0d6efd', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background-color 0.2s' }}
+                                            onMouseOver={(e) => e.target.style.backgroundColor = '#0b5ed7'}
+                                            onMouseOut={(e) => e.target.style.backgroundColor = '#0d6efd'}
+                                        >
+                                            Report Incident
+                                        </button>
+                                        <button 
+                                            onClick={() => navigate('/incidents?resourceId=' + booking.facilityId)}
+                                            style={{ backgroundColor: '#198754', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', transition: 'background-color 0.2s' }}
+                                            onMouseOver={(e) => e.target.style.backgroundColor = '#157347'}
+                                            onMouseOut={(e) => e.target.style.backgroundColor = '#198754'}
+                                        >
+                                            View Incidents
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
