@@ -32,7 +32,11 @@ const AdminSidebar = () => {
                     All Bookings
                 </div>
                 
-                <div style={{ ...linkStyle }}>Maintenance Tickets</div>
+                <div 
+                    onClick={() => navigate('/incidents')} 
+                    style={{ ...linkStyle, backgroundColor: location.pathname.startsWith('/incidents') ? 'rgba(255,255,255,0.2)' : 'transparent' }}>
+                    Maintenance Tickets
+                </div>
                 <div style={{ ...linkStyle }}>User Management</div>
             </div>
 
