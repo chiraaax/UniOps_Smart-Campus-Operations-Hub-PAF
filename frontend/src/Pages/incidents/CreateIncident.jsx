@@ -19,7 +19,7 @@ const CreateIncident = () => {
     attachmentUrls: []
   });
   
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([null, null, null]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -38,13 +38,13 @@ const CreateIncident = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (images.length + files.length > 3) {
-      alert('You can only upload a maximum of 3 images.');
-      return;
+  const handleSlotImageChange = (index, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const newImages = [...images];
+      newImages[index] = file;
+      setImages(newImages);
     }
-    setImages([...images, ...files].slice(0, 3));
   };
 
   const handleSubmit = async (e) => {
@@ -53,8 +53,10 @@ const CreateIncident = () => {
     try {
       const uploadedUrls = [];
       for (const file of images) {
-        const url = await uploadIncidentImage(file);
-        uploadedUrls.push(url);
+        if (file) {
+          const url = await uploadIncidentImage(file);
+          uploadedUrls.push(url);
+        }
       }
 
       await createIncident({ 
@@ -107,13 +109,46 @@ const CreateIncident = () => {
           <input type="text" name="contactDetails" value={formData.contactDetails} onChange={handleChange} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Attachments (Max 3)</label>
-          <input type="file" multiple accept="image/*" onChange={handleImageChange} className="mt-1 block w-full" disabled={images.length >= 3} />
-          {images.length > 0 && (
-            <div className="mt-2 text-sm text-gray-600">
-              Selected ({images.length}/3): {images.map(img => img.name).join(', ')}
-            </div>
-          )}
+          <label className="block text-sm font-medium text-gray-700 mb-2">Photos (You can add up to 3 photos)</label>
+          <div className="flex gap-4">
+            {[0, 1, 2].map(index => (
+              <div key={index} className="relative w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center bg-gray-50 hover:bg-gray-100 cursor-pointer overflow-hidden group">
+                {images[index] ? (
+                  <>
+                    <img src={URL.createObjectURL(images[index])} alt={`Upload ${index + 1}`} className="w-full h-full object-cover" />
+                    <button 
+                       type="button"
+                       onClick={(e) => {
+                         e.preventDefault();
+                         const newImages = [...images];
+                         newImages[index] = null;
+                         setImages(newImages);
+                       }}
+                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      &times;
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-gray-400 flex flex-col items-center">
+                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {/* Hidden input - absolutely positioned over the entire box so clicking anywhere triggers it */}
+                {!images[index] && (
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => handleSlotImageChange(index, e)} 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                    title={`Upload image ${index + 1}`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
         <button type="submit" disabled={uploading} className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
           {uploading ? 'Submitting...' : 'Submit Ticket'}
