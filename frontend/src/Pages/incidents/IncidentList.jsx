@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAllIncidents } from '../../services/incidentService';
 import facilityService from '../../services/facilityService';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 const IncidentList = () => {
   const [incidents, setIncidents] = useState([]);
@@ -10,6 +10,8 @@ const IncidentList = () => {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlResourceId = searchParams.get('resourceId');
 
   useEffect(() => {
     fetchData();
@@ -47,21 +49,33 @@ const IncidentList = () => {
   const filteredIncidents = incidents.filter(ticket => {
     const matchStatus = statusFilter ? ticket.status === statusFilter : true;
     const matchPriority = priorityFilter ? ticket.priority === priorityFilter : true;
+    const matchUrlResource = urlResourceId ? String(ticket.resourceId) === String(urlResourceId) : true;
     const resourceName = getResourceName(ticket.resourceId);
     const matchSearch = searchQuery 
         ? ticket.category?.toLowerCase().includes(searchQuery.toLowerCase()) || 
           resourceName.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
-    return matchStatus && matchPriority && matchSearch;
+    return matchStatus && matchPriority && matchUrlResource && matchSearch;
   });
 
   return (
     <div className="container mx-auto mt-10 p-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Incident Tickets</h2>
-        <Link to="/incidents/new" className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
-          Report Incident
-        </Link>
+        <h2 className="text-2xl font-bold text-gray-800">
+          {urlResourceId ? `Incident Tickets for ${getResourceName(urlResourceId)}` : 'Incident Tickets'}
+        </h2>
+        <div className="flex gap-4">
+          {urlResourceId && (
+            <button 
+              onClick={() => navigate('/incidents')} 
+              className="bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 font-medium">
+              View All Incidents
+            </button>
+          )}
+          <Link to={`/incidents/new${urlResourceId ? `?resourceId=${urlResourceId}` : ''}`} className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-medium">
+            Report Incident
+          </Link>
+        </div>
       </div>
       <div className="bg-white p-4 shadow rounded-lg mb-6 flex gap-4">
         <input 
