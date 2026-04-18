@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from '../../utils/config';
@@ -25,8 +25,6 @@ import {
 } from "date-fns";
 
 const BookingCalendar = () => {
-  console.log("BookingCalendar component rendered");
-
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState("month"); // "month" or "week"
@@ -47,14 +45,9 @@ const BookingCalendar = () => {
     setUser(JSON.parse(savedUser));
   }, [navigate]);
 
-  useEffect(() => {
-    if (user) {
-      console.log("useEffect triggered, calling fetchBookings");
-      fetchBookings();
-    }
-  }, [user]);
+  const fetchBookings = useCallback(async () => {
+    if (!user?.id) return;
 
-  const fetchBookings = async () => {
     try {
       console.log("Fetching bookings...");
       const response = await axios.get(`${API_BASE_URL}/api/bookings/user/${user.id}`, {
@@ -64,11 +57,16 @@ const BookingCalendar = () => {
       setBookings(response.data);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching bookings:", err);
-      setError("Failed to load bookings: " + (err.response?.data || err.message));
+      setError(
+        "Failed to load bookings: " + (err.response?.data || err.message)
+      );
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const getBookingsForDate = (date) => {
     return bookings.filter((booking) => {
@@ -97,7 +95,6 @@ const BookingCalendar = () => {
 
         return targetDate >= startDate && targetDate <= endDate;
       } catch (error) {
-        console.error("Error filtering booking:", booking, error);
         return false;
       }
     });
@@ -106,15 +103,35 @@ const BookingCalendar = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "PENDING":
-        return { bg: "bg-yellow-100", border: "border-yellow-400", text: "text-yellow-800" };
+        return {
+          bg: "bg-yellow-100",
+          border: "border-yellow-400",
+          text: "text-yellow-800",
+        };
       case "APPROVED":
-        return { bg: "bg-green-100", border: "border-green-400", text: "text-green-800" };
+        return {
+          bg: "bg-green-100",
+          border: "border-green-400",
+          text: "text-green-800",
+        };
       case "REJECTED":
-        return { bg: "bg-red-100", border: "border-red-400", text: "text-red-800" };
+        return {
+          bg: "bg-red-100",
+          border: "border-red-400",
+          text: "text-red-800",
+        };
       case "CANCELLED":
-        return { bg: "bg-gray-100", border: "border-gray-400", text: "text-gray-800" };
+        return {
+          bg: "bg-gray-100",
+          border: "border-gray-400",
+          text: "text-gray-800",
+        };
       default:
-        return { bg: "bg-blue-100", border: "border-blue-400", text: "text-blue-800" };
+        return {
+          bg: "bg-blue-100",
+          border: "border-blue-400",
+          text: "text-blue-800",
+        };
     }
   };
 
@@ -203,7 +220,9 @@ const BookingCalendar = () => {
                           >
                             <div className="flex items-center gap-1">
                               {getStatusIcon(booking.status)}
-                              <span className="truncate">{booking.resourceName}</span>
+                              <span className="truncate">
+                                {booking.resourceName}
+                              </span>
                             </div>
                             <div className="text-xs opacity-75">
                               {format(new Date(booking.startTime), "HH:mm")}
@@ -257,10 +276,16 @@ const BookingCalendar = () => {
                 <div
                   key={day.toString()}
                   className={`flex-1 min-w-32 border rounded-lg p-2 ${
-                    isTodayDate ? "border-blue-500 border-2 bg-blue-50" : "border-gray-200 bg-white"
+                    isTodayDate
+                      ? "border-blue-500 border-2 bg-blue-50"
+                      : "border-gray-200 bg-white"
                   }`}
                 >
-                  <div className={`text-sm font-bold mb-2 ${isTodayDate ? "text-blue-600" : "text-gray-800"}`}>
+                  <div
+                    className={`text-sm font-bold mb-2 ${
+                      isTodayDate ? "text-blue-600" : "text-gray-800"
+                    }`}
+                  >
                     {format(day, "EEE")}
                     <div className="text-xs font-normal text-gray-600">
                       {format(day, "MMM d")}
@@ -272,7 +297,10 @@ const BookingCalendar = () => {
                     {dayBookings.map((booking) => {
                       const colors = getStatusColor(booking.status);
                       const startHour = new Date(booking.startTime).getHours();
-                      const duration = (new Date(booking.endTime) - new Date(booking.startTime)) / (1000 * 60 * 60);
+                      const duration =
+                        (new Date(booking.endTime) -
+                          new Date(booking.startTime)) /
+                        (1000 * 60 * 60);
 
                       return (
                         <button
@@ -290,7 +318,9 @@ const BookingCalendar = () => {
                         >
                           <div className="flex items-center gap-1 font-semibold">
                             {getStatusIcon(booking.status)}
-                            <span className="truncate">{booking.resourceName}</span>
+                            <span className="truncate">
+                              {booking.resourceName}
+                            </span>
                           </div>
                           <div className="text-xs opacity-75">
                             {format(new Date(booking.startTime), "HH:mm")} -
@@ -319,7 +349,9 @@ const BookingCalendar = () => {
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-sm w-full">
           {/* Modal Header */}
-          <div className={`${colors.bg} ${colors.text} px-6 py-4 border-b-4 ${colors.border}`}>
+          <div
+            className={`${colors.bg} ${colors.text} px-6 py-4 border-b-4 ${colors.border}`}
+          >
             <div className="flex items-center gap-2 text-lg font-bold">
               {getStatusIcon(selectedBooking.status)}
               {selectedBooking.status}
@@ -329,26 +361,38 @@ const BookingCalendar = () => {
           {/* Modal Body */}
           <div className="p-6 space-y-4">
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase">Resource</p>
-              <p className="text-lg font-bold text-gray-800">{selectedBooking.resourceName}</p>
+              <p className="text-xs font-bold text-gray-500 uppercase">
+                Resource
+              </p>
+              <p className="text-lg font-bold text-gray-800">
+                {selectedBooking.resourceName}
+              </p>
             </div>
 
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase">Purpose</p>
+              <p className="text-xs font-bold text-gray-500 uppercase">
+                Purpose
+              </p>
               <p className="text-gray-700">{selectedBooking.purpose}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Attendees</p>
+                <p className="text-xs font-bold text-gray-500 uppercase">
+                  Attendees
+                </p>
                 <p className="text-gray-700">{selectedBooking.attendees}</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase">Duration</p>
+                <p className="text-xs font-bold text-gray-500 uppercase">
+                  Duration
+                </p>
                 <p className="text-gray-700">
                   {Math.round(
-                    (new Date(selectedBooking.endTime) - new Date(selectedBooking.startTime)) /
-                      (1000 * 60 * 60) * 10
+                    ((new Date(selectedBooking.endTime) -
+                      new Date(selectedBooking.startTime)) /
+                      (1000 * 60 * 60)) *
+                      10
                   ) / 10}{" "}
                   hrs
                 </p>
@@ -356,14 +400,18 @@ const BookingCalendar = () => {
             </div>
 
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase">Start Time</p>
+              <p className="text-xs font-bold text-gray-500 uppercase">
+                Start Time
+              </p>
               <p className="text-gray-700">
                 {format(new Date(selectedBooking.startTime), "PPpp")}
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase">End Time</p>
+              <p className="text-xs font-bold text-gray-500 uppercase">
+                End Time
+              </p>
               <p className="text-gray-700">
                 {format(new Date(selectedBooking.endTime), "PPpp")}
               </p>
@@ -371,8 +419,12 @@ const BookingCalendar = () => {
 
             {selectedBooking.adminReason && (
               <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded">
-                <p className="text-xs font-bold text-red-700 uppercase">Admin Note</p>
-                <p className="text-sm text-red-700 mt-1">{selectedBooking.adminReason}</p>
+                <p className="text-xs font-bold text-red-700 uppercase">
+                  Admin Note
+                </p>
+                <p className="text-sm text-red-700 mt-1">
+                  {selectedBooking.adminReason}
+                </p>
               </div>
             )}
           </div>
@@ -394,7 +446,9 @@ const BookingCalendar = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-gray-800 text-xl font-semibold">Loading calendar...</div>
+        <div className="text-gray-800 text-xl font-semibold">
+          Loading calendar...
+        </div>
       </div>
     );
   }
@@ -412,8 +466,12 @@ const BookingCalendar = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">📅 Booking Calendar</h1>
-          <p className="text-gray-600">View your bookings in a calendar format</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            📅 Booking Calendar
+          </h1>
+          <p className="text-gray-600">
+            View your bookings in a calendar format
+          </p>
           <div className="h-1 w-24 bg-blue-600 mt-4 rounded"></div>
         </div>
 
@@ -427,7 +485,9 @@ const BookingCalendar = () => {
                   if (viewType === "month") {
                     setCurrentDate(subMonths(currentDate, 1));
                   } else {
-                    setCurrentDate(new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000));
+                    setCurrentDate(
+                      new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+                    );
                   }
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
@@ -439,7 +499,10 @@ const BookingCalendar = () => {
                 <h2 className="text-xl font-bold text-gray-800">
                   {viewType === "month"
                     ? format(currentDate, "MMMM yyyy")
-                    : `${format(startOfWeek(currentDate), "MMM d")} - ${format(endOfWeek(currentDate), "MMM d, yyyy")}`}
+                    : `${format(startOfWeek(currentDate), "MMM d")} - ${format(
+                        endOfWeek(currentDate),
+                        "MMM d, yyyy"
+                      )}`}
                 </h2>
               </div>
 
@@ -448,7 +511,9 @@ const BookingCalendar = () => {
                   if (viewType === "month") {
                     setCurrentDate(addMonths(currentDate, 1));
                   } else {
-                    setCurrentDate(new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000));
+                    setCurrentDate(
+                      new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+                    );
                   }
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition"
@@ -500,7 +565,9 @@ const BookingCalendar = () => {
               const colors = getStatusColor(status);
               return (
                 <div key={status} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded ${colors.bg} border-2 ${colors.border}`}></div>
+                  <div
+                    className={`w-3 h-3 rounded ${colors.bg} border-2 ${colors.border}`}
+                  ></div>
                   <span className="text-sm text-gray-700">{label}</span>
                 </div>
               );

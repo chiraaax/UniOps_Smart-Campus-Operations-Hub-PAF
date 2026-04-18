@@ -1,11 +1,21 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, ClipboardList, LogIn, UserPlus, UserCircle } from 'lucide-react';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  BookOpen,
+  ClipboardList,
+  LogIn,
+  UserPlus,
+  UserCircle,
+  Building2,
+  Package,
+} from "lucide-react";
 
 const NavBar = () => {
   const location = useLocation();
 
-  const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
+  const isAuthPage =
+    location.pathname === "/signin" || location.pathname === "/signup";
 
   if (isAuthPage) return null;
 
@@ -26,9 +36,9 @@ const NavBar = () => {
           <Link
             to="/dashboard"
             className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all font-medium ${
-              location.pathname === '/dashboard'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+              location.pathname === "/dashboard"
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
             }`}
           >
             <LayoutDashboard size={18} /> Dashboard
@@ -36,19 +46,39 @@ const NavBar = () => {
           <Link
             to="/booking"
             className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all font-medium ${
-              location.pathname === '/booking'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+              location.pathname === "/booking"
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
             }`}
           >
             <BookOpen size={18} /> Book Resource
           </Link>
           <Link
+            to="/facilities"
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all font-medium ${
+              location.pathname.startsWith("/facilities")
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+            }`}
+          >
+            <Building2 size={18} /> Facilities
+          </Link>
+          <Link
+            to="/assets"
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all font-medium ${
+              location.pathname.startsWith("/assets")
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+            }`}
+          >
+            <Package size={18} /> Assets
+          </Link>
+          <Link
             to="/status"
             className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all font-medium ${
-              location.pathname === '/status'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+              location.pathname === "/status"
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
             }`}
           >
             <ClipboardList size={18} /> My Bookings
@@ -56,9 +86,9 @@ const NavBar = () => {
           <Link
             to="/profile"
             className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all font-medium ${
-              location.pathname === '/profile'
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+              location.pathname === "/profile"
+                ? "text-blue-600 bg-blue-50"
+                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
             }`}
           >
             <UserCircle size={18} /> Profile
@@ -92,9 +122,9 @@ const NavBar = () => {
           <Link
             to="/admin/verify"
             className={`px-4 py-2 rounded-lg font-semibold transition ${
-              location.pathname === '/admin/verify'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              location.pathname === "/admin/verify"
+                ? "bg-blue-600 text-white"
+                : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
             }`}
           >
             🔍 Verify

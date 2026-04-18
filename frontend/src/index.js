@@ -6,7 +6,9 @@ import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ENABLE_GOOGLE_AUTH, GOOGLE_CLIENT_ID } from './utils/config';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const queryClient = new QueryClient();
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   ENABLE_GOOGLE_AUTH ? (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
