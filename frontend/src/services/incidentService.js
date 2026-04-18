@@ -12,6 +12,11 @@ export const getAllIncidents = async () => {
     return response.data;
 };
 
+export const getTicketsForTechnician = async (techId) => {
+    const response = await axios.get(`${API_URL}/technician/${techId}`);
+    return response.data;
+};
+
 export const updateIncidentStatus = async (id, status, notes = '', technicianId = '', rejectedReason = '') => {
     const response = await axios.patch(`${API_URL}/${id}/status`, null, {
         params: { status, resolutionNotes: notes, technicianId, rejectedReason }

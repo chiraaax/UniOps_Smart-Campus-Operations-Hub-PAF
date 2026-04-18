@@ -39,6 +39,11 @@ public class IncidentTicketController {
         return ResponseEntity.ok(service.getTicketsByUser(userId));
     }
 
+    @GetMapping("/technician/{techId}")
+    public ResponseEntity<List<IncidentTicket>> getTechnicianTickets(@PathVariable String techId) {
+        return ResponseEntity.ok(service.getTicketsByTechnician(techId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<IncidentTicket> getTicketById(@PathVariable String id) {
         return ResponseEntity.ok(service.getTicketById(id));
