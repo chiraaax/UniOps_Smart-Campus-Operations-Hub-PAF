@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from '../../utils/config';
+import { getAuthHeaders } from '../../utils/helpers';
 import { Users } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -15,8 +17,12 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
         try {
-            const tasksRes = await axios.get("http://localhost:8080/api/admin/pending-tasks");
-            const techsRes = await axios.get("http://localhost:8080/api/admin/technicians");
+            const tasksRes = await axios.get(`${API_BASE_URL}/api/admin/pending-tasks`, {
+                headers: getAuthHeaders(),
+            });
+            const techsRes = await axios.get(`${API_BASE_URL}/api/admin/technicians`, {
+                headers: getAuthHeaders(),
+            });
             setTasks(tasksRes.data);
             setTechnicians(techsRes.data);
         } catch (err) {
@@ -28,7 +34,9 @@ const AdminDashboard = () => {
 
     const fetchPendingTechs = async () => {
         try {
-            const res = await axios.get("http://localhost:8080/api/admin/pending-technicians");
+            const res = await axios.get(`${API_BASE_URL}/api/admin/pending-technicians`, {
+                headers: getAuthHeaders(),
+            });
             setPendingTechs(res.data);
         } catch (err) {
             console.error("Error fetching pending techs", err);
@@ -37,7 +45,9 @@ const AdminDashboard = () => {
 
     const handleTechAction = async (id, action) => {
         try {
-            await axios.put(`http://localhost:8080/api/admin/${action}-tech/${id}`);
+            await axios.put(`${API_BASE_URL}/api/admin/${action}-tech/${id}`, null, {
+                headers: getAuthHeaders(),
+            });
             fetchPendingTechs();
             fetchData(); // Refresh approved techs list
             alert(`Technician ${action === 'approve' ? 'Approved' : 'Rejected'}`);
@@ -48,7 +58,9 @@ const AdminDashboard = () => {
 
     const handleAction = async (id, action) => {
         try {
-            await axios.put(`http://localhost:8080/api/admin/${action}/${id}`);
+            await axios.put(`${API_BASE_URL}/api/admin/${action}/${id}`, null, {
+                headers: getAuthHeaders(),
+            });
             fetchData();
         } catch (err) {
             alert(`Error performing ${action}`);
@@ -58,7 +70,9 @@ const AdminDashboard = () => {
     const handleAssign = async (taskId, technicianId) => {
         if (!technicianId) return;
         try {
-            await axios.put(`http://localhost:8080/api/admin/assign/${taskId}/${technicianId}`);
+            await axios.put(`${API_BASE_URL}/api/admin/assign/${taskId}/${technicianId}`, null, {
+                headers: getAuthHeaders(),
+            });
             fetchData();
         } catch (err) {
             alert("Error assigning technician");

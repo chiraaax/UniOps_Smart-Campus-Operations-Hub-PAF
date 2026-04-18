@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle, XCircle, Clock, X, Download, QrCode } from "lucide-react";
+import { API_BASE_URL } from "../../utils/config";
 
 const BookingStatus = () => {
   const navigate = useNavigate();
@@ -12,8 +13,15 @@ const BookingStatus = () => {
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
     if (!savedUser) {
       alert("Please sign in to view your bookings.");
+      navigate("/signin");
+      return;
+    }
+
+    if (!token) {
+      alert("Your session has expired. Please sign in again.");
       navigate("/signin");
       return;
     }
@@ -29,7 +37,19 @@ const BookingStatus = () => {
 
   const fetchBookings = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/bookings/user/${user.id}`);
+      const token = localStorage.getItem("token");
+      const userId = user?.id || user?._id;
+      if (!userId) {
+        setError("Unable to find user information. Please sign in again.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${API_BASE_URL}/api/bookings/user/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setBookings(response.data);
       setLoading(false);
     } catch (err) {
@@ -71,7 +91,12 @@ const BookingStatus = () => {
   const handleCancel = async (bookingId) => {
     if (window.confirm("Are you sure you want to cancel this booking?")) {
       try {
-        await axios.put(`http://localhost:8080/api/bookings/${bookingId}/cancel`);
+        const token = localStorage.getItem("token");
+        await axios.put(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, null, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         fetchBookings(); // Refresh the list
         alert("Booking cancelled successfully!");
       } catch (err) {

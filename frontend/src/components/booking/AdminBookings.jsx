@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import apiClient from '../../utils/api';
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -20,7 +20,7 @@ const AdminBookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8080/api/bookings');
+      const response = await apiClient.get('/api/bookings');
       setBookings(response.data);
       setError(null);
     } catch (err) {
@@ -33,7 +33,7 @@ const AdminBookings = () => {
 
   const handleApprove = async (bookingId) => {
     try {
-      await axios.put(`http://localhost:8080/api/bookings/${bookingId}/approve`);
+      await apiClient.put(`/api/bookings/${bookingId}/approve`);
       // Update local state
       setBookings(bookings.map(booking =>
         booking.id === bookingId
@@ -52,7 +52,7 @@ const AdminBookings = () => {
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/bookings/${bookingId}/reject`, null, {
+      await apiClient.put(`/api/bookings/${bookingId}/reject`, null, {
         params: { reason: rejectReason.trim() }
       });
       // Update local state

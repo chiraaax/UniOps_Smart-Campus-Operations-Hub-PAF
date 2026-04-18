@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../utils/config';
+import { getAuthHeaders } from '../../utils/helpers';
 import jsQR from 'jsqr';
 import { CheckCircle, XCircle, Search, Camera, Upload } from 'lucide-react';
 
@@ -19,8 +21,9 @@ const AdminVerification = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8080/api/bookings/verify', content, {
+      const response = await axios.post(`${API_BASE_URL}/api/bookings/verify`, content, {
         headers: {
+          ...getAuthHeaders(),
           'Content-Type': 'text/plain'
         }
       });

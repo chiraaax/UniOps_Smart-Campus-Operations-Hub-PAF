@@ -1,0 +1,63 @@
+﻿curl.exe : * Host localhost:8080 was resolved.
+At line:1 char:63
++ ... s-Hub-PAF'; curl.exe -v http://localhost:8080/v3/api-docs 2>&1 | Out- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (* Host localhost:8080 was resolve 
+   d.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+
+  0      0   0      0   0      0      0      0                              0* 
+  Trying [::1]:8080...
+* Established connection to localhost (::1 port 8080) from ::1 port 34098 
+* using HTTP/1.x
+> GET /v3/api-docs HTTP/1.1
+
+> Host: localhost:8080
+
+> User-Agent: curl/8.18.0
+
+> Accept: */*
+
+> 
+
+* Request completely sent off
+< HTTP/1.1 200 
+
+< Vary: Origin
+
+< Vary: Access-Control-Request-Method
+
+< Vary: Access-Control-Request-Headers
+
+< X-Content-Type-Options: nosniff
+
+< X-XSS-Protection: 0
+
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+
+< Pragma: no-cache
+
+< Expires: 0
+
+< X-Frame-Options: DENY
+
+< Content-Type: application/json
+
+< Content-Length: 10516
+
+< Date: Fri, 17 Apr 2026 15:46:20 GMT
+
+< 
+
+{ [7824 bytes data]
+
+100  10516 100  10516   0      0  1.14M      0                              0
+100  10516 100  10516   0      0  1.11M      0                              0
+100  10516 100  10516   0      0  1.09M      0                              0
+* Connection #0 to host localhost:8080 left intact
+{"openapi":"3.0.1","info":{"title":"OpenAPI definition","version":"v0"},"servers":[{"url":"http://localhost:8080","description":"Generated server url"}],"paths":{"/api/v1/facilities/{id}":{"get":{"tags":["facility-controller"],"summary":"Get facility by ID","operationId":"getFacilityById","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}},"404":{"description":"Not Found","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}}}},"put":{"tags":["facility-controller"],"summary":"Update facility by ID","operationId":"updateFacility","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/FacilityRequestDTO"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}},"404":{"description":"Not Found","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}},"400":{"description":"Bad Request","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}}}},"delete":{"tags":["facility-controller"],"summary":"Delete a facility","operationId":"deleteFacility","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"204":{"description":"No Content"},"404":{"description":"Not Found"}}}},"/api/bookings/{id}/reject":{"put":{"tags":["booking-controller"],"operationId":"reject","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}},{"name":"reason","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/Booking"}}}}}}},"/api/bookings/{id}/cancel":{"put":{"tags":["booking-controller"],"operationId":"cancel","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/Booking"}}}}}}},"/api/bookings/{id}/approve":{"put":{"tags":["booking-controller"],"operationId":"approve","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/Booking"}}}}}}},"/api/v1/facilities":{"get":{"tags":["facility-controller"],"summary":"Get all facilities with pagination","operationId":"getAllFacilities","parameters":[{"name":"page","in":"query","required":false,"schema":{"type":"integer","format":"int32","default":0}},{"name":"size","in":"query","required":false,"schema":{"type":"integer","format":"int32","default":10}},{"name":"sort","in":"query","required":false,"schema":{"type":"string","default":"name,asc"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/PageFacilityResponseDTO"}}}}}},"post":{"tags":["facility-controller"],"summary":"Create a new facility","operationId":"createFacility","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/FacilityRequestDTO"}}},"required":true},"responses":{"400":{"description":"Bad Request","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}},"201":{"description":"Created","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}}}}},"/api/bookings":{"get":{"tags":["booking-controller"],"operationId":"getAllBookings","responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Booking"}}}}}}},"post":{"tags":["booking-controller"],"operationId":"createBooking","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Booking"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/Booking"}}}}}}},"/api/bookings/verify":{"post":{"tags":["booking-controller"],"operationId":"verifyBooking","requestBody":{"content":{"application/json":{"schema":{"type":"string"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/BookingVerificationResult"}}}}}}},"/api/auth/signup":{"post":{"tags":["auth-controller"],"operationId":"registerUser","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/User"}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"object"}}}}}}},"/api/auth/signin":{"post":{"tags":["auth-controller"],"operationId":"authenticateUser","requestBody":{"content":{"application/json":{"schema":{"type":"object","additionalProperties":{"type":"string"}}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"object"}}}}}}},"/api/v1/facilities/{id}/status":{"patch":{"tags":["facility-controller"],"summary":"Update facility status","operationId":"updateFacilityStatus","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"requestBody":{"content":{"application/json":{"schema":{"type":"object","additionalProperties":{"type":"string"}}}},"required":true},"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}},"404":{"description":"Not Found","content":{"*/*":{"schema":{"$ref":"#/components/schemas/FacilityResponseDTO"}}}}}}},"/api/v1/facilities/search":{"get":{"tags":["facility-controller"],"summary":"Search and filter facilities","operationId":"searchFacilities","parameters":[{"name":"type","in":"query","required":false,"schema":{"type":"string","enum":["LECTURE_HALL","LAB","MEETING_ROOM"]}},{"name":"status","in":"query","required":false,"schema":{"type":"string","enum":["ACTIVE","OUT_OF_SERVICE","UNDER_MAINTENANCE"]}},{"name":"location","in":"query","required":false,"schema":{"type":"string"}},{"name":"minCapacity","in":"query","required":false,"schema":{"type":"integer","format":"int32"}},{"name":"page","in":"query","required":false,"schema":{"type":"integer","format":"int32","default":0}},{"name":"size","in":"query","required":false,"schema":{"type":"integer","format":"int32","default":10}},{"name":"sort","in":"query","required":false,"schema":{"type":"string","default":"name,asc"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"$ref":"#/components/schemas/PageFacilityResponseDTO"}}}}}}},"/api/bookings/user/{userId}":{"get":{"tags":["booking-controller"],"operationId":"getUserBookings","parameters":[{"name":"userId","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"OK","content":{"*/*":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Booking"}}}}}}}}},"components":{"schemas":{"FacilityRequestDTO":{"required":["availabilityEnd","availabilityStart","bookingDate","capacity","facilityType","location","name","status"],"type":"object","properties":{"name":{"maxLength":100,"minLength":3,"pattern":"^[A-Za-z0-9][A-Za-z0-9 .,'()/#-]*$","type":"string"},"facilityType":{"type":"string","enum":["LECTURE_HALL","LAB","MEETING_ROOM"]},"capacity":{"maximum":10000,"minimum":1,"type":"integer","format":"int32"},"location":{"maxLength":120,"minLength":3,"pattern":"^[A-Za-z0-9][A-Za-z0-9 .,'()/#-]*$","type":"string"},"description":{"maxLength":1000,"minLength":0,"type":"string"},"availabilityStart":{"$ref":"#/components/schemas/LocalTime"},"availabilityEnd":{"$ref":"#/components/schemas/LocalTime"},"bookingDate":{"type":"string","format":"date"},"status":{"type":"string","enum":["ACTIVE","OUT_OF_SERVICE","UNDER_MAINTENANCE"]},"availabilityWindowValid":{"type":"boolean"}}},"LocalTime":{"type":"object","properties":{"hour":{"type":"integer","format":"int32"},"minute":{"type":"integer","format":"int32"},"second":{"type":"integer","format":"int32"},"nano":{"type":"integer","format":"int32"}}},"FacilityResponseDTO":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"facilityType":{"type":"string","enum":["LECTURE_HALL","LAB","MEETING_ROOM"]},"capacity":{"type":"integer","format":"int32"},"location":{"type":"string"},"description":{"type":"string"},"availabilityStart":{"$ref":"#/components/schemas/LocalTime"},"availabilityEnd":{"$ref":"#/components/schemas/LocalTime"},"bookingDate":{"type":"string","format":"date"},"status":{"type":"string","enum":["ACTIVE","OUT_OF_SERVICE","UNDER_MAINTENANCE"]},"createdAt":{"type":"string","format":"date-time"},"updatedAt":{"type":"string","format":"date-time"}}},"Booking":{"type":"object","properties":{"id":{"type":"string"},"resourceName":{"type":"string"},"purpose":{"type":"string"},"attendees":{"type":"integer","format":"int32"},"startTime":{"type":"string","format":"date-time"},"endTime":{"type":"string","format":"date-time"},"userId":{"type":"string"},"status":{"type":"string"},"adminReason":{"type":"string"},"qrCodeData":{"type":"string"}}},"BookingVerificationResult":{"type":"object","properties":{"valid":{"type":"boolean"},"message":{"type":"string"},"bookingId":{"type":"string"},"resourceName":{"type":"string"},"userId":{"type":"string"},"dateTime":{"type":"string"}}},"User":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"email":{"type":"string"},"password":{"type":"string"},"role":{"type":"string"},"department":{"type":"string"}}},"PageFacilityResponseDTO":{"type":"object","properties":{"totalPages":{"type":"integer","format":"int32"},"totalElements":{"type":"integer","format":"int64"},"first":{"type":"boolean"},"last":{"type":"boolean"},"size":{"type":"integer","format":"int32"},"content":{"type":"array","items":{"$ref":"#/components/schemas/FacilityResponseDTO"}},"number":{"type":"integer","format":"int32"},"sort":{"$ref":"#/components/schemas/SortObject"},"numberOfElements":{"type":"integer","format":"int32"},"pageable":{"$ref":"#/components/schemas/PageableObject"},"empty":{"type":"boolean"}}},"PageableObject":{"type":"object","properties":{"offset":{"type":"integer","format":"int64"},"sort":{"$ref":"#/components/schemas/SortObject"},"pageSize":{"type":"integer","format":"int32"},"pageNumber":{"type":"integer","format":"int32"},"paged":{"type":"boolean"},"unpaged":{"type":"boolean"}}},"SortObject":{"type":"object","properties":{"empty":{"type":"boolean"},"sorted":{"type":"boolean"},"unsorted":{"type":"boolean"}}}}}}

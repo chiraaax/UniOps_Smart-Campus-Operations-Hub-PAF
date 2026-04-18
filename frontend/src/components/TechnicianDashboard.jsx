@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { API_BASE_URL } from '../utils/config';
+import { getAuthHeaders } from '../utils/helpers';
 
 const TechnicianDashboard = () => {
     const [tasks, setTasks] = useState([]);
@@ -10,7 +12,9 @@ const TechnicianDashboard = () => {
     const fetchTasks = useCallback(async () => {
         if (!user || !user.id) return;
         try {
-            const res = await axios.get(`http://localhost:8080/api/technician/tasks/${user.id}`);
+            const res = await axios.get(`${API_BASE_URL}/api/technician/tasks/${user.id}`, {
+            headers: getAuthHeaders(),
+        });
             setTasks(res.data);
         } catch (err) {
             console.error("Error fetching technician tasks", err);
@@ -27,7 +31,9 @@ const TechnicianDashboard = () => {
 
     const handleComplete = async (taskId) => {
         try {
-            await axios.put(`http://localhost:8080/api/technician/complete/${taskId}`);
+            await axios.put(`${API_BASE_URL}/api/technician/complete/${taskId}`, null, {
+            headers: getAuthHeaders(),
+        });
             fetchTasks();
             alert("Task marked as completed!");
         } catch (err) {
