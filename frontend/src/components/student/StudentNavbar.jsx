@@ -12,6 +12,7 @@ const StudentNavbar = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
 
+    // Navigation items – exactly as in the original styled version
     const navItems = [
         { label: 'Home', path: '/', match: location.pathname === '/' },
         { label: 'Facilities', path: '/facilities', match: location.pathname.startsWith('/facilities') },
@@ -43,9 +44,45 @@ const StudentNavbar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [user]);
 
-    const handleNotificationClick = async (id) => {
-        await notificationService.markAsRead(id);
-        fetchNotifications();
+    // Enhanced notification click handler with category-based navigation
+    const handleNotificationClick = async (notif) => {
+        if (!notif.read) {
+            await notificationService.markAsRead(notif.id);
+            fetchNotifications();
+        }
+
+        setShowDropdown(false);
+
+        switch (notif.category) {
+            case 'BOOKING':
+                navigate('/my-bookings', { state: { highlightId: notif.referenceId } });
+                break;
+            case 'TICKET':
+                if (notif.referenceId) {
+                    navigate(`/incidents/${notif.referenceId}`);
+                } else {
+                    navigate('/incidents');
+                }
+                break;
+            case 'FACILITY':
+                if (notif.referenceId) navigate(`/facilities/${notif.referenceId}`);
+                else navigate('/facilities');
+                break;
+            default:
+                console.log('General notification clicked');
+                break;
+        }
+    };
+
+    // New delete handler with stopPropagation to avoid triggering the parent click
+    const handleDeleteNotification = async (e, id) => {
+        e.stopPropagation();
+        try {
+            await notificationService.deleteNotification(id);
+            fetchNotifications();
+        } catch (error) {
+            console.error('Failed to delete notification', error);
+        }
     };
 
     const handleMarkAllRead = async () => {
@@ -108,7 +145,9 @@ const StudentNavbar = () => {
                         />
                     </div>
                     <div>
-                        <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '18px', letterSpacing: '0.06em' }}>UNIOPS</div>
+                        <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '18px', letterSpacing: '0.06em' }}>
+                            UNIOPS
+                        </div>
                         <div style={{ fontSize: '12px', color: '#64748b' }}>Smart campus operations hub</div>
                     </div>
                 </div>
@@ -190,7 +229,9 @@ const StudentNavbar = () => {
                                     />
                                 </svg>
                             </span>
-                            <span style={{ fontWeight: 'bold', color: '#334155', fontSize: '13px' }}>Notifications</span>
+                            <span style={{ fontWeight: 'bold', color: '#334155', fontSize: '13px' }}>
+                                Notifications
+                            </span>
                             {unreadCount > 0 && (
                                 <span
                                     style={{
@@ -238,13 +279,24 @@ const StudentNavbar = () => {
                                     }}
                                 >
                                     <div>
-                                        <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>Notifications</h4>
-                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Stay updated with booking and incident activity</div>
+                                        <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>
+                                            Notifications
+                                        </h4>
+                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                                            Stay updated with booking and incident activity
+                                        </div>
                                     </div>
                                     {unreadCount > 0 && (
                                         <button
                                             onClick={handleMarkAllRead}
-                                            style={{ background: 'none', border: 'none', color: '#0b4aa6', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#0b4aa6',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                fontSize: '12px'
+                                            }}
                                         >
                                             Mark all read
                                         </button>
@@ -253,36 +305,138 @@ const StudentNavbar = () => {
 
                                 <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                                     {notifications.length === 0 ? (
-                                        <div style={{ padding: '30px', textAlign: 'center', color: '#6c757d', fontSize: '14px' }}>
+                                        <div
+                                            style={{
+                                                padding: '30px',
+                                                textAlign: 'center',
+                                                color: '#6c757d',
+                                                fontSize: '14px'
+                                            }}
+                                        >
                                             No new notifications
                                         </div>
                                     ) : (
                                         notifications.map((notification) => (
                                             <div
                                                 key={notification.id}
-                                                onClick={() => handleNotificationClick(notification.id)}
+                                                onClick={() => handleNotificationClick(notification)}
                                                 style={{
                                                     padding: '15px 16px',
                                                     borderBottom: '1px solid #eef2f7',
                                                     backgroundColor: notification.read ? '#ffffff' : '#f8fbff',
-                                                    cursor: 'pointer'
+                                                    cursor: 'pointer',
+                                                    position: 'relative'
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
-                                                    <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        gap: '12px',
+                                                        marginBottom: '6px'
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            fontWeight: 'bold',
+                                                            color: '#0f172a',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
                                                         {notification.title}
                                                     </div>
-                                                    {!notification.read && (
-                                                        <div style={{ width: '9px', height: '9px', backgroundColor: '#0d6efd', borderRadius: '50%', marginTop: '4px' }} />
-                                                    )}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        {!notification.read && (
+                                                            <div
+                                                                style={{
+                                                                    width: '9px',
+                                                                    height: '9px',
+                                                                    backgroundColor: '#0d6efd',
+                                                                    borderRadius: '50%'
+                                                                }}
+                                                            />
+                                                        )}
+                                                        <button
+                                                            onClick={(e) =>
+                                                                handleDeleteNotification(e, notification.id)
+                                                            }
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: '#94a3b8',
+                                                                cursor: 'pointer',
+                                                                padding: '4px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                borderRadius: '6px',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#fee2e2';
+                                                                e.currentTarget.style.color = '#dc2626';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                                e.currentTarget.style.color = '#94a3b8';
+                                                            }}
+                                                            title="Delete notification"
+                                                        >
+                                                            <svg
+                                                                width="16"
+                                                                height="16"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M3 6h18" />
+                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
 
-                                                <div style={{ color: '#475569', fontSize: '13px', marginBottom: '8px', lineHeight: 1.6 }}>
+                                                <div
+                                                    style={{
+                                                        color: '#475569',
+                                                        fontSize: '13px',
+                                                        marginBottom: '8px',
+                                                        lineHeight: 1.6
+                                                    }}
+                                                >
                                                     {notification.message}
                                                 </div>
 
-                                                <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 'bold' }}>
-                                                    {new Date(notification.createdAt).toLocaleString()}
+                                                <div
+                                                    style={{
+                                                        color: '#94a3b8',
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}
+                                                >
+                                                    <span>
+                                                        {new Date(notification.createdAt).toLocaleString()}
+                                                    </span>
+                                                    {notification.category && (
+                                                        <span
+                                                            style={{
+                                                                backgroundColor: '#f1f5f9',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                fontSize: '10px',
+                                                                color: '#475569'
+                                                            }}
+                                                        >
+                                                            {notification.category}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))
@@ -320,7 +474,9 @@ const StudentNavbar = () => {
                             {user.name?.charAt(0)?.toUpperCase() || 'U'}
                         </div>
                         <div>
-                            <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>{user.name}</div>
+                            <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>
+                                {user.name}
+                            </div>
                             <div style={{ color: '#64748b', fontSize: '12px' }}>Student Portal</div>
                         </div>
                     </div>
