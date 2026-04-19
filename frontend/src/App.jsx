@@ -50,7 +50,7 @@ const AppRoutes = () => {
         <AdminSidebar />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <main style={{ flex: 1, padding: '20px' }}>
+          <main style={{ flex: 1, padding: '0px' }}>
             <Routes>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
