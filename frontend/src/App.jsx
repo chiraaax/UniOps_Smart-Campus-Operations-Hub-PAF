@@ -10,6 +10,10 @@ import AdminSidebar from './components/admin/AdminSidebar';
 import AdminDashboard from './Pages/admin/AdminDashboard';
 import AdminBookings from './Pages/bookings/AdminBookings';
 
+// --- TECHNICIAN ---
+import TechnicianSidebar from './components/technician/TechnicianSidebar';
+import TechnicianDashboard from './Pages/technician/TechnicianDashboard';
+
 // --- STUDENT ---
 import StudentNavbar from './components/student/StudentNavbar';
 import HomePage from './Pages/student/HomePage';
@@ -59,6 +63,29 @@ const AppRoutes = () => {
               <Route path="/incidents/:id" element={<TicketDetails />} />
 
               <Route path="*" element={<Navigate to="/admin/dashboard" />} />
+            </Routes>
+          </main>
+
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 1.5 TECHNICIAN LAYOUT (Sidebar + Dashboard)
+  // ==========================================
+  if (user && user.role === 'TECHNICIAN') {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
+        <TechnicianSidebar />
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <main style={{ flex: 1, padding: '20px' }}>
+            <Routes>
+              <Route path="/technician/dashboard" element={<TechnicianDashboard />} />
+              <Route path="/incidents/:id" element={<TicketDetails />} />
+              <Route path="*" element={<Navigate to="/technician/dashboard" />} />
             </Routes>
           </main>
 

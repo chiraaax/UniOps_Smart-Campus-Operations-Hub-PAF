@@ -8,4 +8,5 @@ import com.sliit.smartcampus.modules.incident.model.IncidentTicket;
 
 public interface IncidentTicketRepository extends MongoRepository<IncidentTicket, String> {
     List<IncidentTicket> findByReportedByUserId(String userId);
+    List<IncidentTicket> findByTechnicianId(String technicianId);
 }

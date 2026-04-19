@@ -37,6 +37,10 @@ public class IncidentTicketService {
         return repository.findByReportedByUserId(userId);
     }
 
+    public List<IncidentTicket> getTicketsByTechnician(String technicianId) {
+        return repository.findByTechnicianId(technicianId);
+    }
+
     public IncidentTicket getTicketById(String id) {
         return repository.findById(id).orElseThrow(() -> new RuntimeException("Ticket not found"));
     }

@@ -29,6 +29,11 @@ public class UserController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    @GetMapping("/technicians")
+    public ResponseEntity<List<User>> getTechnicians() {
+        return ResponseEntity.ok(userRepository.findByRole(Role.TECHNICIAN));
+    }
+
     // 1. UPDATED: This now handles BOTH Google Login and Manual Login users!
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
