@@ -47,7 +47,7 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getBookingAnalytics());
     }
 
-    // --- NEW: QR CODE CHECK-IN ENDPOINT ---
+    // --- QR CODE CHECK-IN ENDPOINT ---
     @PutMapping("/{id}/checkin")
     public ResponseEntity<?> checkInBooking(@PathVariable String id) {
         try {
