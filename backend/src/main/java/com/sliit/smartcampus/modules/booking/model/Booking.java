@@ -26,4 +26,9 @@ public class Booking {
     private LocalDateTime endTime;
     
     private BookingStatus status = BookingStatus.PENDING; 
+    
+    // --- NEW: QR CODE CHECK-IN TRACKER ---
+    private boolean checkedIn = false; 
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -13,11 +13,14 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
 
-    public Notification createNotification(String userId, String title, String message) {
+    // --- UPDATED CREATE LOGIC ---
+    public Notification createNotification(String userId, String title, String message, String category, String referenceId) {
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setTitle(title);
         notification.setMessage(message);
+        notification.setCategory(category != null ? category : "GENERAL");
+        notification.setReferenceId(referenceId);
         return notificationRepository.save(notification);
     }
 
@@ -38,5 +41,10 @@ public class NotificationService {
         
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
+    }
+
+    // --- NEW: DELETE LOGIC ---
+    public void deleteNotification(String notificationId) {
+        notificationRepository.deleteById(notificationId);
     }
 }

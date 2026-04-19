@@ -7,43 +7,41 @@ import Footer from './components/common/Footer';
 
 // --- ADMIN ---
 import AdminSidebar from './components/admin/AdminSidebar';
-import AdminDashboard from './Pages/admin/AdminDashboard';
-import AdminBookings from './Pages/bookings/AdminBookings';
+import AdminDashboard from './Pages/admin/AdminDashboard'; // UPDATED to Pages
+import AdminBookings from './Pages/bookings/AdminBookings'; // UPDATED to Pages
 
 // --- TECHNICIAN ---
 import TechnicianSidebar from './components/technician/TechnicianSidebar';
-import TechnicianDashboard from './Pages/technician/TechnicianDashboard';
+import TechnicianDashboard from './Pages/technician/TechnicianDashboard'; 
 
 // --- STUDENT ---
 import StudentNavbar from './components/student/StudentNavbar';
-import HomePage from './Pages/student/HomePage';
-import StudentBookings from './Pages/bookings/StudentBookings';
+import HomePage from './Pages/student/HomePage'; // UPDATED to Pages
+import StudentBookings from './Pages/bookings/StudentBookings'; 
 
 // --- FACILITIES ---
-import FacilitiesCatalogue from './Pages/facilities/FacilitiesCatalogue';
-import FacilityDetails from './Pages/facilities/FacilityDetails';
+import FacilitiesCatalogue from './Pages/facilities/FacilitiesCatalogue'; // UPDATED to Pages
+import FacilityDetails from './Pages/facilities/FacilityDetails'; 
 
 // --- INCIDENTS ---
-import IncidentList from './Pages/incidents/IncidentList';
-import CreateIncident from './Pages/incidents/CreateIncident';
-import TicketDetails from './Pages/incidents/TicketDetails';
+import IncidentList from './Pages/incidents/IncidentList'; 
+import CreateIncident from './Pages/incidents/CreateIncident'; 
+import TicketDetails from './Pages/incidents/TicketDetails'; 
 
 // --- AUTH ---
-import LoginPage from './Pages/auth/LoginPage';
-import RegisterPage from './Pages/auth/RegisterPage';
+import LoginPage from './Pages/auth/LoginPage'; // UPDATED to Pages
+import RegisterPage from './Pages/auth/RegisterPage'; // UPDATED to Pages
 
 const AppRoutes = () => {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
-    return <div style={{ padding: '50px', textAlign: 'center', color: '#0d6efd', fontWeight: 'bold', fontFamily: 'sans-serif' }}>Loading Campus Nexus...</div>;
+    return <div style={{ padding: '50px', textAlign: 'center', color: '#0d6efd', fontWeight: 'bold', fontFamily: 'sans-serif' }}>Loading Uni Ops...</div>;
   }
 
   // ==========================================
   // 1. ADMIN LAYOUT (Sidebar + Dashboard)
   // ==========================================
-
-  // ADMIN
   if (user && user.role === 'ADMIN') {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
@@ -98,7 +96,6 @@ const AppRoutes = () => {
   // ==========================================
   // 2. PUBLIC & STUDENT LAYOUT (Top Navbar + Home)
   // ==========================================
-  // STUDENT / PUBLIC
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f4f7f6' }}>
       <StudentNavbar />
@@ -113,17 +110,16 @@ const AppRoutes = () => {
           {/* Protected Route: Only logged-in students can see their bookings */}
           <Route path="/my-bookings" element={user ? <StudentBookings /> : <Navigate to="/login" />} />
           
+          {/* Protected Incident Routes */}
+          <Route path="/incidents" element={user ? <IncidentList /> : <Navigate to="/login" />} />
+          <Route path="/incidents/new" element={user ? <CreateIncident /> : <Navigate to="/login" />} />
+          <Route path="/incidents/:id" element={user ? <TicketDetails /> : <Navigate to="/login" />} />
+
           {/* Auth Routes */}
-
-          <Route path="/incidents" element={<IncidentList />} />
-          <Route path="/incidents/new" element={<CreateIncident />} />
-          <Route path="/incidents/:id" element={<TicketDetails />} />
-
           <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
           <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/" />} />
           
           {/* Catch-all route */}
-
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

@@ -1,6 +1,6 @@
-# Campus Nexus
+# Uni Ops
 
-Campus Nexus is a full-stack smart campus management system with a Spring Boot backend and a React + Vite frontend. It provides a foundation for modules like bookings, facilities, incidents, notifications, and users, with a simple health endpoint to verify system connectivity.
+Uni Ops is a full-stack smart campus management system with a Spring Boot backend and a React + Vite frontend. It provides a foundation for modules like bookings, facilities, incidents, notifications, and users, with a simple health endpoint to verify system connectivity.
 
 ## Highlights
 - Backend: Spring Boot 3.5.x, Java 17+, JPA, Security, OAuth2 Client

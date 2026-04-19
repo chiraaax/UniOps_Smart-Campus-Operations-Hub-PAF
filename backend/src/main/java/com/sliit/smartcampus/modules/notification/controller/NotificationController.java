@@ -31,4 +31,11 @@ public class NotificationController {
         notificationService.markAllAsRead(userId);
         return ResponseEntity.ok().build();
     }
+
+    // --- NEW: DELETE ENDPOINT ---
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable String id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.ok().build();
+    }
 }

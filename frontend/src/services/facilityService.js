@@ -6,6 +6,12 @@ const facilityService = {
         return response.data;
     },
     
+    // --- NEW: GET LIVE FUSION DATA ---
+    getFacilitiesWithLiveStatus: async () => {
+        const response = await api.get('/facilities/live');
+        return response.data;
+    },
+    
     createFacility: async (facilityData) => {
         const response = await api.post('/facilities', facilityData);
         return response.data;
@@ -26,7 +32,6 @@ const facilityService = {
         return response.data; 
     },
 
-    // Handles the actual updating of the record
     updateFacility: async (id, facilityData) => {
         const response = await api.put(`/facilities/${id}`, facilityData);
         return response.data;

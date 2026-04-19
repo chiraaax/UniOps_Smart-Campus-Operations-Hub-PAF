@@ -12,10 +12,14 @@ public class Notification {
     @Id
     private String id;
     
-    private String userId; // Who receives this?
+    private String userId; 
     private String title;
     private String message;
     
-    private boolean isRead = false; // Defaults to unread
+    // --- NEW FIELDS FOR ENHANCEMENTS ---
+    private String category = "GENERAL"; // e.g., BOOKING, TICKET
+    private String referenceId; // The ID of the booking or ticket to navigate to
+    
+    private boolean isRead = false; 
     private LocalDateTime createdAt = LocalDateTime.now();
 }
