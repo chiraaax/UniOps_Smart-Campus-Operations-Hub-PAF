@@ -2,45 +2,71 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import facilityService from '../../services/facilityService';
 import { AuthContext } from '../../context/AuthContext';
-import AddFacilityModal from './AddFacilityModal'; 
+import AddFacilityModal from './AddFacilityModal';
 import EditFacilityModal from './EditFacilityModal';
+
+const CARD_ACCENT_BY_TYPE = {
+    'Lecture Hall': ['#f97316', '#fdba74'],
+    Lab: ['#0ea5e9', '#7dd3fc'],
+    'Meeting Room': ['#10b981', '#6ee7b7'],
+    Equipment: ['#8b5cf6', '#c4b5fd']
+};
+
+const getTypeAccent = (type) => CARD_ACCENT_BY_TYPE[type] || ['#2563eb', '#93c5fd'];
+
+const getStatusTone = (status) => {
+    if (status === 'ACTIVE') {
+        return {
+            backgroundColor: '#dcfce7',
+            color: '#166534',
+            border: '1px solid #86efac',
+            label: 'Available'
+        };
+    }
+
+    return {
+        backgroundColor: '#fee2e2',
+        color: '#991b1b',
+        border: '1px solid #fca5a5',
+        label: 'Unavailable'
+    };
+};
 
 const FacilitiesCatalogue = () => {
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
-    
-    const [facilitiesLive, setFacilitiesLive] = useState([]);
+
+    const [facilities, setFacilities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('ALL');
-    
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [facilityToEdit, setFacilityToEdit] = useState(null);
 
     useEffect(() => {
-        fetchLiveFacilities();
+        fetchFacilities();
     }, []);
 
-    const fetchLiveFacilities = async () => {
+    const fetchFacilities = async () => {
         try {
-            const data = await facilityService.getFacilitiesWithLiveStatus();
-            setFacilitiesLive(data);
+            const data = await facilityService.getAllFacilities();
+            setFacilities(data);
         } catch (error) {
-            console.error("Error loading facilities:", error);
+            console.error('Error loading facilities:', error);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to completely delete this resource?")) {
+        if (window.confirm('Are you sure you want to completely delete this resource?')) {
             try {
                 await facilityService.deleteFacility(id);
-                fetchLiveFacilities(); 
+                fetchFacilities();
             } catch (error) {
-                console.error("Failed to delete", error);
-                alert("Error deleting resource.");
+                console.error('Failed to delete', error);
+                alert('Error deleting resource.');
             }
         }
     };
@@ -50,205 +76,374 @@ const FacilitiesCatalogue = () => {
         setIsEditModalOpen(true);
     };
 
-    const filteredFacilities = facilitiesLive.filter(item => {
-        const fac = item.facility;
-        const matchSearch = fac.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            fac.location?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchType = filterType === 'ALL' || fac.type === filterType;
+    const filteredFacilities = facilities.filter((facility) => {
+        const searchValue = searchTerm.toLowerCase();
+        const matchSearch =
+            facility.name?.toLowerCase().includes(searchValue) ||
+            facility.location?.toLowerCase().includes(searchValue);
+        const matchType = filterType === 'ALL' || facility.type === filterType;
+
         return matchSearch && matchType;
     });
 
-    if (loading) return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-    );
+    const activeFacilities = facilities.filter((facility) => facility.status === 'ACTIVE').length;
+    const totalCapacity = facilities.reduce((sum, facility) => {
+        const capacity = Number(facility.capacity);
+        return sum + (capacity > 0 ? capacity : 0);
+    }, 0);
+    const distinctTypes = [...new Set(facilities.map((facility) => facility.type).filter(Boolean))];
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 pb-16 font-sans">
-            
-            {/* HERO HEADER */}
-            <div className="relative text-white pb-32 pt-16 px-6 shadow-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #084298 0%, #0d6efd 100%)' }}>
-                {/* Decorative Background Elements */}
-                <div className="absolute inset-0 overflow-hidden opacity-40">
-                    <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/30 via-cyan-400/20 to-sky-400/20 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute top-20 -left-20 w-[500px] h-[500px] bg-gradient-to-tr from-indigo-500/20 via-blue-400/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-                    <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `linear-gradient(to right, #60a5fa 1px, transparent 1px), linear-gradient(to bottom, #60a5fa 1px, transparent 1px)`, backgroundSize: '60px 60px' }}></div>
-                </div>
-
-                <div className="container mx-auto max-w-6xl relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="relative hidden md:block">
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400 rounded-2xl blur-xl opacity-60"></div>
-                            <div className="relative w-14 h-14 bg-gradient-to-br from-blue-500 via-cyan-500 to-sky-500 rounded-2xl flex items-center justify-center shadow-2xl">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div>
-                            <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
-                                Campus Resources
-                            </h1>
-                            <p className="text-blue-200/80 text-lg mt-1 font-medium">Live Campus Map & Intelligent Booking Hub</p>
-                        </div>
-                    </div>
-
-                    {user && user.role === 'ADMIN' && (
-                        <button 
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="group relative px-6 py-3.5 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-300 font-bold flex items-center gap-2 shadow-lg w-full md:w-auto justify-center"
-                        >
-                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Add New Resource
-                        </button>
-                    )}
+    if (loading) {
+        return (
+            <div
+                style={{
+                    minHeight: '70vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    padding: '40px 20px',
+                    color: '#1d4ed8'
+                }}
+            >
+                <div>
+                    <div style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '10px' }}>Loading campus spaces...</div>
+                    <div style={{ color: '#64748b' }}>Preparing the latest facility availability and details.</div>
                 </div>
             </div>
+        );
+    }
 
-            <div className="container mx-auto max-w-6xl -mt-16 px-4 relative z-20">
-                
-                {/* SEARCH BAR (Floating over header) */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 md:p-6 mb-10 flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+    return (
+        <div
+            style={{
+                minHeight: '100vh',
+                background:
+                    'radial-gradient(circle at top left, rgba(191, 219, 254, 0.45), transparent 26%), linear-gradient(180deg, #eff6ff 0%, #f8fbff 45%, #ffffff 100%)',
+                padding: '24px 0 56px',
+                fontFamily: 'Segoe UI, sans-serif'
+            }}
+        >
+            <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 20px' }}>
+                <section
+                    style={{
+                        background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%)',
+                        color: '#ffffff',
+                        borderRadius: '30px',
+                        padding: '30px',
+                        boxShadow: '0 30px 80px rgba(30, 64, 175, 0.22)',
+                        marginBottom: '24px'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                        <div style={{ maxWidth: '650px' }}>
+                            <div
+                                style={{
+                                    fontSize: '12px',
+                                    letterSpacing: '0.18em',
+                                    textTransform: 'uppercase',
+                                    color: 'rgba(255,255,255,0.72)',
+                                    marginBottom: '12px'
+                                }}
+                            >
+                                Smart Campus Resource Hub
+                            </div>
+                            <h1 style={{ margin: '0 0 12px', fontSize: 'clamp(32px, 5vw, 46px)', lineHeight: 1.05 }}>
+                                Find the right space faster
+                            </h1>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.86)', lineHeight: 1.7, fontSize: '16px' }}>
+                                Browse classrooms, labs, meeting rooms, and shared resources in one place. Search by name or location,
+                                review availability, and jump straight into booking.
+                            </p>
                         </div>
-                        <input 
-                            type="text" 
-                            placeholder="Search by resource name or location..." 
-                            value={searchTerm} 
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all duration-200"
-                        />
-                    </div>
-                    <select 
-                        value={filterType} 
-                        onChange={(e) => setFilterType(e.target.value)} 
-                        className="w-full md:w-64 px-4 py-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all duration-200 font-semibold cursor-pointer"
-                    >
-                        <option value="ALL">All Categories</option>
-                        <option value="Lecture Hall">Lecture Hall</option>
-                        <option value="Lab">Computing Lab</option>
-                        <option value="Meeting Room">Meeting Room</option>
-                        <option value="Equipment">Hardware / Equipment</option>
-                    </select>
-                </div>
 
-                {/* GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {user && user.role === 'ADMIN' && (
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                style={{
+                                    backgroundColor: '#ffffff',
+                                    color: '#0f172a',
+                                    border: 'none',
+                                    padding: '14px 18px',
+                                    borderRadius: '16px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 16px 30px rgba(15, 23, 42, 0.18)'
+                                }}
+                            >
+                                + Add Resource
+                            </button>
+                        )}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px', marginTop: '28px' }}>
+                        <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '20px', padding: '18px' }}>
+                            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '13px' }}>Total resources</div>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px' }}>{facilities.length}</div>
+                        </div>
+                        <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '20px', padding: '18px' }}>
+                            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '13px' }}>Available now</div>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px' }}>{activeFacilities}</div>
+                        </div>
+                        <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '20px', padding: '18px' }}>
+                            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '13px' }}>Resource types</div>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px' }}>{distinctTypes.length}</div>
+                        </div>
+                        <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '20px', padding: '18px' }}>
+                            <div style={{ color: 'rgba(255,255,255,0.72)', fontSize: '13px' }}>Combined capacity</div>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px' }}>{totalCapacity || 'N/A'}</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section
+                    style={{
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid #dbeafe',
+                        borderRadius: '24px',
+                        padding: '20px',
+                        marginBottom: '24px',
+                        boxShadow: '0 18px 45px rgba(148, 163, 184, 0.16)'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '14px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
+                        <div>
+                            <h2 style={{ margin: 0, color: '#0f172a', fontSize: '22px' }}>Search and filter</h2>
+                            <p style={{ margin: '6px 0 0', color: '#64748b' }}>Narrow down resources by name, location, or category.</p>
+                        </div>
+                        {(searchTerm || filterType !== 'ALL') && (
+                            <button
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setFilterType('ALL');
+                                }}
+                                style={{
+                                    border: '1px solid #bfdbfe',
+                                    backgroundColor: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    padding: '10px 14px',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Clear filters
+                            </button>
+                        )}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(220px, 0.7fr)', gap: '14px' }}>
+                        <input
+                            type="text"
+                            placeholder="Search by resource name or location"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '14px 16px',
+                                borderRadius: '16px',
+                                border: '1px solid #cbd5e1',
+                                backgroundColor: '#ffffff',
+                                color: '#0f172a',
+                                boxSizing: 'border-box',
+                                fontSize: '15px'
+                            }}
+                        />
+                        <select
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '14px 16px',
+                                borderRadius: '16px',
+                                border: '1px solid #cbd5e1',
+                                backgroundColor: '#ffffff',
+                                color: '#0f172a',
+                                fontSize: '15px'
+                            }}
+                        >
+                            <option value="ALL">All Types</option>
+                            <option value="Lecture Hall">Lecture Hall</option>
+                            <option value="Lab">Lab</option>
+                            <option value="Meeting Room">Meeting Room</option>
+                            <option value="Equipment">Equipment</option>
+                        </select>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '16px' }}>
+                        <div style={{ padding: '8px 12px', borderRadius: '999px', backgroundColor: '#eff6ff', color: '#1d4ed8', fontWeight: 'bold', fontSize: '13px' }}>
+                            Showing {filteredFacilities.length} resources
+                        </div>
+                        {filterType !== 'ALL' && (
+                            <div style={{ padding: '8px 12px', borderRadius: '999px', backgroundColor: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0', fontWeight: 'bold', fontSize: '13px' }}>
+                                Filter: {filterType}
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '22px' }}>
                     {filteredFacilities.length === 0 ? (
-                        <div className="col-span-full bg-white rounded-2xl border-2 border-dashed border-gray-200 p-16 text-center">
-                            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <h3 className="text-xl font-bold text-gray-700 mb-1">No resources found</h3>
-                            <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+                        <div
+                            style={{
+                                gridColumn: '1 / -1',
+                                backgroundColor: '#ffffff',
+                                borderRadius: '24px',
+                                border: '1px dashed #cbd5e1',
+                                padding: '42px 24px',
+                                textAlign: 'center',
+                                boxShadow: '0 16px 40px rgba(148, 163, 184, 0.12)'
+                            }}
+                        >
+                            <h3 style={{ margin: '0 0 10px', color: '#0f172a', fontSize: '24px' }}>No matching resources found</h3>
+                            <p style={{ margin: '0 0 18px', color: '#64748b', lineHeight: 1.7 }}>
+                                Try a different keyword, switch the type filter, or reset the search to see all available spaces.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setFilterType('ALL');
+                                }}
+                                style={{
+                                    backgroundColor: '#0f62fe',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '14px',
+                                    padding: '12px 18px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Reset search
+                            </button>
                         </div>
                     ) : (
-                        filteredFacilities.map(item => {
-                            const fac = item.facility;
-                            const isAvailable = item.liveStatus === "AVAILABLE NOW";
-                            
+                        filteredFacilities.map((facility) => {
+                            const accent = getTypeAccent(facility.type);
+                            const statusTone = getStatusTone(facility.status);
+
                             return (
-                                <div key={fac.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 flex flex-col relative group">
-                                    
-                                    {/* LIVE STATUS BADGE OVERLAY */}
-                                    <div 
-                                        className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-[11px] font-extrabold tracking-wider border shadow-sm flex items-center gap-2 z-10"
-                                        style={{ color: item.statusColor, borderColor: `${item.statusColor}40` }}
-                                    >
-                                        <div className={`w-2 h-2 rounded-full ${!isAvailable ? 'animate-pulse' : ''}`} style={{ backgroundColor: item.statusColor }}></div>
-                                        {item.liveStatus}
-                                    </div>
-
-                                    {/* IMAGE SECTION */}
-                                    <div className="relative h-56 overflow-hidden bg-gray-100">
-                                        {fac.imageUrl ? (
-                                            <img src={fac.imageUrl} alt={fac.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center">
-                                                <span className="text-gray-400 font-extrabold text-2xl tracking-widest uppercase">{fac.type}</span>
+                                <div
+                                    key={facility.id}
+                                    style={{
+                                        border: '1px solid #dbeafe',
+                                        borderRadius: '24px',
+                                        overflow: 'hidden',
+                                        backgroundColor: '#ffffff',
+                                        boxShadow: '0 16px 40px rgba(15, 23, 42, 0.08)'
+                                    }}
+                                >
+                                    {facility.imageUrl ? (
+                                        <img src={facility.imageUrl} alt={facility.name} style={{ width: '100%', height: '190px', objectFit: 'cover' }} />
+                                    ) : (
+                                        <div
+                                            style={{
+                                                height: '190px',
+                                                background: `linear-gradient(135deg, ${accent[0]} 0%, ${accent[1]} 100%)`,
+                                                display: 'flex',
+                                                alignItems: 'flex-end',
+                                                padding: '20px'
+                                            }}
+                                        >
+                                            <div style={{ color: '#ffffff' }}>
+                                                <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em', opacity: 0.85 }}>Campus Resource</div>
+                                                <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '8px' }}>{facility.type || 'Facility'}</div>
                                             </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-60"></div>
-                                    </div>
+                                        </div>
+                                    )}
 
-                                    {/* CONTENT SECTION */}
-                                    <div className="p-6 flex flex-col flex-1 relative bg-white">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border border-blue-100">
-                                                {fac.type}
+                                    <div style={{ padding: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', marginBottom: '14px' }}>
+                                            <div>
+                                                <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b', marginBottom: '6px' }}>
+                                                    {facility.type || 'Shared Space'}
+                                                </div>
+                                                <h3 style={{ margin: 0, color: '#0f172a', fontSize: '23px', lineHeight: 1.2 }}>{facility.name}</h3>
+                                            </div>
+                                            <span
+                                                style={{
+                                                    ...statusTone,
+                                                    fontSize: '12px',
+                                                    padding: '7px 10px',
+                                                    borderRadius: '999px',
+                                                    fontWeight: 'bold',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                            >
+                                                {statusTone.label}
                                             </span>
                                         </div>
-                                        
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">{fac.name}</h3>
-                                        
-                                        <p className="text-gray-500 text-sm mb-5 flex items-center gap-2 font-medium">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                            </svg>
-                                            {fac.location}
+
+                                        <p style={{ margin: '0 0 16px', color: '#475569', minHeight: '44px', lineHeight: 1.6 }}>
+                                            {facility.location || 'Location not provided'}
                                         </p>
-                                        
-                                        {/* ACTIVITY SUBTEXT */}
-                                        <div 
-                                            className="px-4 py-3 rounded-xl text-sm font-semibold mb-6 border-l-4"
-                                            style={{ backgroundColor: `${item.statusColor}10`, color: item.statusColor, borderColor: item.statusColor }}
-                                        >
-                                            {item.currentActivity}
-                                        </div>
 
-                                        <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl mb-6 border border-gray-100">
-                                            <div className="flex items-center gap-2 text-gray-700 text-sm font-semibold">
-                                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                                </svg>
-                                                {fac.capacity > 0 ? `${fac.capacity} Seats` : 'N/A'}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-700 text-sm font-semibold">
-                                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                {fac.openTime || 'N/A'} - {fac.closeTime || 'N/A'}
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-auto">
-                                            <button
-                                                onClick={() => navigate(`/facilities/${fac.id}`)}
-                                                className={`w-full py-3.5 rounded-xl font-bold text-[15px] transition-all duration-300 transform active:scale-95 ${
-                                                    isAvailable 
-                                                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/30' 
-                                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                                }`}
-                                            >
-                                                View Details & Schedule
-                                            </button>
-
-                                            {/* ADMIN CONTROLS */}
-                                            {user && user.role === 'ADMIN' && (
-                                                <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-100">
-                                                    <button 
-                                                        onClick={() => handleEditClick(fac)} 
-                                                        className="py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl font-bold text-sm transition-colors"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(fac.id)} 
-                                                        className="py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold text-sm transition-colors"
-                                                    >
-                                                        Delete
-                                                    </button>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px', marginBottom: '18px' }}>
+                                            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '14px' }}>
+                                                <div style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Capacity</div>
+                                                <div style={{ color: '#0f172a', fontWeight: 'bold', fontSize: '18px', marginTop: '8px' }}>
+                                                    {facility.capacity > 0 ? `${facility.capacity} people` : 'Not listed'}
                                                 </div>
-                                            )}
+                                            </div>
+                                            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '14px' }}>
+                                                <div style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Hours</div>
+                                                <div style={{ color: '#0f172a', fontWeight: 'bold', fontSize: '16px', marginTop: '8px' }}>
+                                                    {facility.openTime || 'N/A'} - {facility.closeTime || 'N/A'}
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        <button
+                                            onClick={() => navigate(`/facilities/${facility.id}`)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '13px 16px',
+                                                background: 'linear-gradient(135deg, #0b4aa6 0%, #0d6efd 100%)',
+                                                color: '#ffffff',
+                                                border: 'none',
+                                                borderRadius: '14px',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                fontSize: '15px',
+                                                boxShadow: '0 14px 28px rgba(13, 110, 253, 0.18)'
+                                            }}
+                                        >
+                                            View Details and Book
+                                        </button>
+
+                                        {user && user.role === 'ADMIN' && (
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', marginTop: '12px' }}>
+                                                <button
+                                                    onClick={() => handleEditClick(facility)}
+                                                    style={{
+                                                        padding: '11px',
+                                                        backgroundColor: '#fff7ed',
+                                                        color: '#9a3412',
+                                                        border: '1px solid #fdba74',
+                                                        borderRadius: '12px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(facility.id)}
+                                                    style={{
+                                                        padding: '11px',
+                                                        backgroundColor: '#fef2f2',
+                                                        color: '#b91c1c',
+                                                        border: '1px solid #fca5a5',
+                                                        borderRadius: '12px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
@@ -257,8 +452,18 @@ const FacilitiesCatalogue = () => {
                 </div>
             </div>
 
-            <AddFacilityModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onFacilityAdded={fetchLiveFacilities} />
-            {facilityToEdit && <EditFacilityModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onFacilityUpdated={fetchLiveFacilities} facility={facilityToEdit} />}
+            <AddFacilityModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onFacilityAdded={fetchFacilities}
+            />
+
+            <EditFacilityModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onFacilityUpdated={fetchFacilities}
+                facility={facilityToEdit}
+            />
         </div>
     );
 };
