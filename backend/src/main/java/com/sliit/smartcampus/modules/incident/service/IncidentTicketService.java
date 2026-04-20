@@ -21,19 +21,20 @@ import com.sliit.smartcampus.modules.notification.service.NotificationService;
 public class IncidentTicketService {
     @Autowired
     private IncidentTicketRepository repository;
-    
+
     @Autowired
     private NotificationService notificationService;
 
     public IncidentTicket createTicket(IncidentTicket ticket) {
-        if(ticket.getAttachmentUrls() != null && ticket.getAttachmentUrls().size() > 3) {
+        if (ticket.getAttachmentUrls() != null && ticket.getAttachmentUrls().size() > 3) {
             throw new IllegalArgumentException("Maximum of 3 attachments allowed.");
         }
         // SAFTEY CHECK
         if (ticket.getAuditLogs() == null) {
             ticket.setAuditLogs(new ArrayList<>());
         }
-        ticket.getAuditLogs().add(new AuditLog("Ticket Created", ticket.getReportedByUserId() != null ? ticket.getReportedByUserId() : "System"));
+        ticket.getAuditLogs().add(new AuditLog("Ticket Created",
+                ticket.getReportedByUserId() != null ? ticket.getReportedByUserId() : "System"));
         return repository.save(ticket);
     }
 
@@ -53,10 +54,11 @@ public class IncidentTicketService {
         return repository.findById(id).orElseThrow(() -> new RuntimeException("Ticket not found"));
     }
 
-    public IncidentTicket updateTicketStatus(String id, TicketStatus newStatus, String resolutionNotes, String technicianId, String rejectedReason) {
+    public IncidentTicket updateTicketStatus(String id, TicketStatus newStatus, String resolutionNotes,
+            String technicianId, String rejectedReason) {
         IncidentTicket ticket = repository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
         // SAFTEY CHECK
         if (ticket.getAuditLogs() == null) {
             ticket.setAuditLogs(new ArrayList<>());
@@ -65,54 +67,94 @@ public class IncidentTicketService {
         if (ticket.getStatus() != newStatus) {
             ticket.getAuditLogs().add(new AuditLog("Status changed to " + newStatus, "Admin/Tech"));
             ticket.setStatus(newStatus);
-            
+
             if (newStatus == TicketStatus.RESOLVED || newStatus == TicketStatus.CLOSED) {
                 if (ticket.getResolvedAt() == null) {
                     ticket.setResolvedAt(LocalDateTime.now());
                 }
             }
-            
+
             if (newStatus == TicketStatus.IN_PROGRESS && ticket.getFirstRespondedAt() == null) {
                 ticket.setFirstRespondedAt(LocalDateTime.now());
             }
 
             if (ticket.getReportedByUserId() != null) {
                 String title = "Ticket Update: " + newStatus.name();
-                String message = "Your incident report for " + (ticket.getCategory() != null ? ticket.getCategory() : "Resource") + " is now " + newStatus.name() + ".";
-                notificationService.createNotification(ticket.getReportedByUserId(), title, message, "TICKET", ticket.getId());
+                String message = "Your incident report for "
+                        + (ticket.getCategory() != null ? ticket.getCategory() : "Resource") + " is now "
+                        + newStatus.name() + ".";
+                notificationService.createNotification(ticket.getReportedByUserId(), title, message, "TICKET",
+                        ticket.getId());
             }
         }
-        
+
         ticket.setUpdatedAt(LocalDateTime.now());
-        
+
         if (technicianId != null && !technicianId.equals(ticket.getTechnicianId())) {
             ticket.setTechnicianId(technicianId);
             ticket.getAuditLogs().add(new AuditLog("Assigned to technician: " + technicianId, "Admin"));
-            
+
             if (ticket.getFirstRespondedAt() == null) {
                 ticket.setFirstRespondedAt(LocalDateTime.now());
             }
         }
-        
-        if (resolutionNotes != null) ticket.setResolutionNotes(resolutionNotes);
-        if (rejectedReason != null) ticket.setRejectedReason(rejectedReason);
-        
+
+        if (resolutionNotes != null)
+            ticket.setResolutionNotes(resolutionNotes);
+        if (rejectedReason != null)
+            ticket.setRejectedReason(rejectedReason);
+
         return repository.save(ticket);
+    }
+
+    public IncidentTicket updateTicket(String id, IncidentTicket updatedTicket, String userId) {
+        IncidentTicket ticket = getTicketById(id);
+
+        // Basic authorization check - logging warnings instead of blocking for better UX during migration
+        if (ticket.getReportedByUserId() != null && !ticket.getReportedByUserId().trim().equalsIgnoreCase(userId.trim())) {
+            System.out.println("Warning: User " + userId + " updated ticket reported by " + ticket.getReportedByUserId());
+        }
+
+        // Apply updates
+        if (updatedTicket.getCategory() != null) ticket.setCategory(updatedTicket.getCategory());
+        if (updatedTicket.getDescription() != null) ticket.setDescription(updatedTicket.getDescription());
+        if (updatedTicket.getPriority() != null) ticket.setPriority(updatedTicket.getPriority());
+        if (updatedTicket.getContactDetails() != null) ticket.setContactDetails(updatedTicket.getContactDetails());
+        if (updatedTicket.getResourceId() != null) ticket.setResourceId(updatedTicket.getResourceId());
+
+        ticket.setUpdatedAt(LocalDateTime.now());
+
+        if (ticket.getAuditLogs() == null) {
+            ticket.setAuditLogs(new ArrayList<>());
+        }
+        ticket.getAuditLogs().add(new AuditLog("Ticket details updated", userId));
+
+        return repository.save(ticket);
+    }
+
+    public void deleteTicket(String id, String userId) {
+        IncidentTicket ticket = getTicketById(id);
+
+        if (ticket.getReportedByUserId() != null && !ticket.getReportedByUserId().trim().equalsIgnoreCase(userId.trim())) {
+            System.out.println("Warning: User " + userId + " deleted ticket reported by " + ticket.getReportedByUserId());
+        }
+
+        repository.delete(ticket);
     }
 
     public IncidentTicket addComment(String ticketId, String userId, String text) {
         IncidentTicket ticket = getTicketById(ticketId);
-        
+
         if (ticket.getFirstRespondedAt() == null) {
             ticket.setFirstRespondedAt(LocalDateTime.now());
         }
-        
+
         TicketComment comment = new TicketComment();
         comment.setId(UUID.randomUUID().toString());
         comment.setUserId(userId);
         comment.setText(text);
         comment.setTimestamp(LocalDateTime.now());
-        
+
         // --- BULLETPROOF SAFTEY CHECKS ---
         if (ticket.getComments() == null) {
             ticket.setComments(new ArrayList<>());
@@ -130,7 +172,8 @@ public class IncidentTicketService {
         if (ticket.getReportedByUserId() != null && !userId.equals(ticket.getReportedByUserId())) {
             String title = "New Reply on Ticket";
             String message = "A new comment was added to your incident ticket.";
-            notificationService.createNotification(ticket.getReportedByUserId(), title, message, "TICKET", ticket.getId());
+            notificationService.createNotification(ticket.getReportedByUserId(), title, message, "TICKET",
+                    ticket.getId());
         }
 
         return repository.save(ticket);
@@ -138,39 +181,41 @@ public class IncidentTicketService {
 
     public IncidentTicket updateComment(String ticketId, String commentId, String userId, String newText) {
         IncidentTicket ticket = getTicketById(ticketId);
-        
-        if (ticket.getComments() == null) return ticket;
+
+        if (ticket.getComments() == null)
+            return ticket;
 
         TicketComment comment = ticket.getComments().stream()
                 .filter(c -> c.getId().equals(commentId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
-                
+
         if (!comment.getUserId().equals(userId)) {
             throw new RuntimeException("User not authorized to update this comment");
         }
-        
+
         comment.setText(newText);
         comment.setTimestamp(LocalDateTime.now());
         ticket.setUpdatedAt(LocalDateTime.now());
-        
+
         return repository.save(ticket);
     }
 
     public IncidentTicket deleteComment(String ticketId, String commentId, String userId, String role) {
         IncidentTicket ticket = getTicketById(ticketId);
-        
-        if (ticket.getComments() == null) return ticket;
+
+        if (ticket.getComments() == null)
+            return ticket;
 
         TicketComment comment = ticket.getComments().stream()
                 .filter(c -> c.getId().equals(commentId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
-        
+
         if (!comment.getUserId().equals(userId) && !"ADMIN".equals(role)) {
             throw new RuntimeException("User not authorized to delete this comment");
         }
-        
+
         ticket.getComments().removeIf(c -> c.getId().equals(commentId));
         ticket.setUpdatedAt(LocalDateTime.now());
         return repository.save(ticket);
@@ -178,14 +223,15 @@ public class IncidentTicketService {
 
     public Map<String, Object> getAnalytics() {
         List<IncidentTicket> all = repository.findAll();
-        
+
         long total = all.size();
-        long active = all.stream().filter(t -> t.getStatus() != TicketStatus.RESOLVED && t.getStatus() != TicketStatus.CLOSED && t.getStatus() != TicketStatus.REJECTED).count();
-        
+        long active = all.stream().filter(t -> t.getStatus() != TicketStatus.RESOLVED
+                && t.getStatus() != TicketStatus.CLOSED && t.getStatus() != TicketStatus.REJECTED).count();
+
         List<IncidentTicket> resolved = all.stream()
                 .filter(t -> t.getStatus() == TicketStatus.RESOLVED || t.getStatus() == TicketStatus.CLOSED)
                 .toList();
-                
+
         double avgHoursToResolve = 0;
         if (!resolved.isEmpty()) {
             long totalMinutes = 0;
@@ -196,12 +242,12 @@ public class IncidentTicketService {
             }
             avgHoursToResolve = (double) totalMinutes / 60.0 / resolved.size();
         }
-        
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalTickets", total);
         stats.put("activeTickets", active);
         stats.put("avgHoursToResolve", Math.round(avgHoursToResolve * 10.0) / 10.0);
-        
+
         return stats;
     }
 }

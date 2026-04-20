@@ -59,6 +59,17 @@ const getDurationLabel = (startTime, endTime) => {
     return `${minutes}m`;
 };
 
+// Robust timestamp extraction (from second version)
+const getBookingTimestamp = (booking) => {
+    const candidates = [booking.createdAt, booking.updatedAt, booking.startTime, booking.endTime];
+    for (const value of candidates) {
+        if (!value) continue;
+        const time = new Date(value).getTime();
+        if (!Number.isNaN(time)) return time;
+    }
+    return 0;
+};
+
 const AdminBookings = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -71,7 +82,8 @@ const AdminBookings = () => {
     const loadBookings = async () => {
         try {
             const data = await bookingService.getAllBookings();
-            data.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+            // Use the improved sorting logic from the second version
+            data.sort((a, b) => getBookingTimestamp(b) - getBookingTimestamp(a));
             setBookings(data);
         } catch (error) {
             console.error('Failed to fetch bookings', error);
@@ -111,7 +123,7 @@ const AdminBookings = () => {
             }}
         >
             <div style={{ maxWidth: '1180px', margin: '0 auto', display: 'grid', gap: '24px' }}>
-                {/* Hero summary for admins to monitor booking volume and status mix at a glance. */}
+                {/* Hero summary */}
                 <section
                     style={{
                         ...shellCardStyle,
@@ -157,7 +169,7 @@ const AdminBookings = () => {
                     </div>
                 </section>
 
-                {/* Quick status tabs keep review work focused without leaving the page. */}
+                {/* Filter tabs */}
                 <section
                     style={{
                         ...shellCardStyle,
@@ -238,7 +250,6 @@ const AdminBookings = () => {
                                         borderLeft: `8px solid ${statusConfig.accent}`
                                     }}
                                 >
-                                    {/* Each card combines booking context and the current admin action area. */}
                                     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.7fr) minmax(280px, 0.95fr)', gap: '20px', alignItems: 'start' }}>
                                         <div style={{ display: 'grid', gap: '18px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', alignItems: 'start' }}>
@@ -292,7 +303,6 @@ const AdminBookings = () => {
                                         </div>
 
                                         <div style={{ display: 'grid', gap: '14px' }}>
-                                            {/* Action panel stays separate so approval decisions remain prominent. */}
                                             <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px' }}>
                                                 <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#64748b', marginBottom: '8px' }}>Review Note</div>
                                                 <div style={{ color: '#334155', lineHeight: 1.7 }}>{statusConfig.note}</div>

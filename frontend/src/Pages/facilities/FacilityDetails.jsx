@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import facilityService from '../../services/facilityService';
 import bookingService from '../../services/bookingService';
 import { AuthContext } from '../../context/AuthContext';
-import { QRCodeSVG } from 'qrcode.react';
 
 const formatScheduleDate = (value) =>
     new Date(value).toLocaleDateString([], {
@@ -174,32 +173,20 @@ const FacilityDetails = () => {
                     )}
 
                     <div style={{ padding: '30px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(220px, 0.7fr)', gap: '18px', marginBottom: '26px', alignItems: 'start' }}>
-                            <div>
-                                <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#64748b', marginBottom: '10px' }}>
-                                    Facility Booking Hub
-                                </div>
-                                <h2 style={{ margin: 0, color: '#0f172a', fontSize: '34px', lineHeight: 1.15 }}>{facility.name}</h2>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '13px', padding: '7px 14px', borderRadius: '999px', backgroundColor: facility.status === 'ACTIVE' ? '#d1fae5' : '#fee2e2', color: facility.status === 'ACTIVE' ? '#065f46' : '#991b1b', fontWeight: 'bold', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                        {facility.status}
-                                    </span>
-                                    <span style={{ color: '#475569', fontSize: '15px' }}>Location: {facility.location}</span>
-                                </div>
-                                <p style={{ margin: '16px 0 0', color: '#475569', lineHeight: 1.7, maxWidth: '640px' }}>
-                                    Review availability, check the upcoming schedule, and send a booking request from one clear workspace.
-                                </p>
+                        <div style={{ marginBottom: '26px' }}>
+                            <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#64748b', marginBottom: '10px' }}>
+                                Facility Booking Hub
                             </div>
-
-                            <div style={{ background: 'linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)', border: '1px solid #bfdbfe', borderRadius: '22px', padding: '18px', textAlign: 'center' }}>
-                                <QRCodeSVG
-                                    value={`${window.location.origin}/incidents/new?resourceId=${facility.id}`}
-                                    size={92}
-                                />
-                                <p style={{ fontSize: '12px', color: '#475569', margin: '10px 0 0', lineHeight: 1.6 }}>
-                                    Scan to report an incident for this facility.
-                                </p>
+                            <h2 style={{ margin: 0, color: '#0f172a', fontSize: '34px', lineHeight: 1.15 }}>{facility.name}</h2>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '13px', padding: '7px 14px', borderRadius: '999px', backgroundColor: facility.status === 'ACTIVE' ? '#d1fae5' : '#fee2e2', color: facility.status === 'ACTIVE' ? '#065f46' : '#991b1b', fontWeight: 'bold', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                    {facility.status}
+                                </span>
+                                <span style={{ color: '#475569', fontSize: '15px' }}>Location: {facility.location}</span>
                             </div>
+                            <p style={{ margin: '16px 0 0', color: '#475569', lineHeight: 1.7, maxWidth: '640px' }}>
+                                Review availability, check the upcoming schedule, and send a booking request from one clear workspace.
+                            </p>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', marginBottom: '28px' }}>

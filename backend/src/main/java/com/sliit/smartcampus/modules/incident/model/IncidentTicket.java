@@ -21,31 +21,33 @@ public class IncidentTicket {
     private String description;
     private TicketPriority priority;
     private String contactDetails;
-    
+
     private List<String> attachmentUrls = new ArrayList<>(); // Max 3 attachments
-    
+
     private TicketStatus status = TicketStatus.OPEN;
     private String technicianId; // Nullable until assigned
     private String resolutionNotes;
     private String rejectedReason;
-    
+
     private List<TicketComment> comments = new ArrayList<>();
     private List<AuditLog> auditLogs = new ArrayList<>(); // Track history
-    
+
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
-    
+
     // --- NEW: SLA TIMERS ---
     private LocalDateTime firstRespondedAt; // When it was first answered/assigned
-    private LocalDateTime resolvedAt;       // When it was fixed
-    
+    private LocalDateTime resolvedAt; // When it was fixed
+
     @Data
     public static class AuditLog {
         private LocalDateTime timestamp;
         private String action;
         private String user;
-        
-        public AuditLog() {}
+
+        public AuditLog() {
+        }
+
         public AuditLog(String action, String user) {
             this.action = action;
             this.user = user;

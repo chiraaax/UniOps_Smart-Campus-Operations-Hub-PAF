@@ -186,12 +186,12 @@ const TicketDetails = () => {
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 mb-8 overflow-hidden">
                     <div className={`h-2 w-full ${getPriorityColor(ticket.priority)}`}></div>
                     <div className="p-8">
-                        
+
                         {/* --- SLA TIMER INTEGRATION --- */}
                         <div className="mb-8 flex justify-end">
                             <SLATimer ticket={ticket} />
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div className="space-y-5">
                                 <div>

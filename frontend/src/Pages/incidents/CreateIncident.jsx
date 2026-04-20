@@ -145,7 +145,7 @@ const CreateIncident = () => {
 
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Details <span className="text-red-500">*</span></label>
-                                <input type="text" name="contactDetails" value={formData.contactDetails} onChange={handleChange} required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all duration-200" placeholder="Your phone number or email" />
+                                <input type="tel" name="contactDetails" value={formData.contactDetails} onChange={handleChange} required pattern="[0-9]{10}" title="Please enter exactly 10 digits" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all duration-200" placeholder="Your 10-digit phone number" />
                             </div>
 
                             <div className="md:col-span-2">

@@ -12,10 +12,14 @@ const StudentNavbar = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
 
+    // Navigation items – includes "My Incidents" when user is logged in (from second version)
     const navItems = [
         { label: 'Home', path: '/', match: location.pathname === '/' },
         { label: 'Facilities', path: '/facilities', match: location.pathname.startsWith('/facilities') },
-        ...(user ? [{ label: 'My Bookings', path: '/my-bookings', match: location.pathname.startsWith('/my-bookings') }] : []),
+        ...(user ? [
+            { label: 'My Bookings', path: '/my-bookings', match: location.pathname.startsWith('/my-bookings') },
+            { label: 'My Incidents', path: '/my-incidents', match: location.pathname.startsWith('/my-incidents') }
+        ] : []),
         { label: 'Incidents', path: '/incidents', match: location.pathname.startsWith('/incidents') }
     ];
 
@@ -43,9 +47,45 @@ const StudentNavbar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [user]);
 
-    const handleNotificationClick = async (id) => {
-        await notificationService.markAsRead(id);
-        fetchNotifications();
+    // Enhanced notification click handler with category-based navigation (from second version)
+    const handleNotificationClick = async (notif) => {
+        if (!notif.read) {
+            await notificationService.markAsRead(notif.id);
+            fetchNotifications();
+        }
+
+        setShowDropdown(false);
+
+        switch (notif.category) {
+            case 'BOOKING':
+                navigate('/my-bookings', { state: { highlightId: notif.referenceId } });
+                break;
+            case 'TICKET':
+                if (notif.referenceId) {
+                    navigate(`/incidents/${notif.referenceId}`);
+                } else {
+                    navigate('/incidents');
+                }
+                break;
+            case 'FACILITY':
+                if (notif.referenceId) navigate(`/facilities/${notif.referenceId}`);
+                else navigate('/facilities');
+                break;
+            default:
+                console.log('General notification clicked');
+                break;
+        }
+    };
+
+    // Delete handler with stopPropagation (from second version, already present in first)
+    const handleDeleteNotification = async (e, id) => {
+        e.stopPropagation();
+        try {
+            await notificationService.deleteNotification(id);
+            fetchNotifications();
+        } catch (error) {
+            console.error('Failed to delete notification', error);
+        }
     };
 
     const handleMarkAllRead = async () => {
@@ -108,7 +148,9 @@ const StudentNavbar = () => {
                         />
                     </div>
                     <div>
-                        <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '18px', letterSpacing: '0.06em' }}>UNIOPS</div>
+                        <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '18px', letterSpacing: '0.06em' }}>
+                            UNIOPS
+                        </div>
                         <div style={{ fontSize: '12px', color: '#64748b' }}>Smart campus operations hub</div>
                     </div>
                 </div>
@@ -151,7 +193,7 @@ const StudentNavbar = () => {
                         <button
                             onClick={() => {
                                 setShowDropdown(!showDropdown);
-                                fetchNotifications();
+                                if (!showDropdown) fetchNotifications();
                             }}
                             style={{
                                 backgroundColor: '#ffffff',
@@ -190,7 +232,9 @@ const StudentNavbar = () => {
                                     />
                                 </svg>
                             </span>
-                            <span style={{ fontWeight: 'bold', color: '#334155', fontSize: '13px' }}>Notifications</span>
+                            <span style={{ fontWeight: 'bold', color: '#334155', fontSize: '13px' }}>
+                                Notifications
+                            </span>
                             {unreadCount > 0 && (
                                 <span
                                     style={{
@@ -204,10 +248,11 @@ const StudentNavbar = () => {
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        padding: '0 6px'
+                                        padding: '0 6px',
+                                        animation: unreadCount > 0 ? 'ping 1.5s infinite' : 'none'
                                     }}
                                 >
-                                    {unreadCount}
+                                    {unreadCount > 9 ? '9+' : unreadCount}
                                 </span>
                             )}
                         </button>
@@ -218,33 +263,49 @@ const StudentNavbar = () => {
                                     position: 'absolute',
                                     top: '58px',
                                     right: 0,
-                                    width: '340px',
+                                    width: '360px',
                                     backgroundColor: '#ffffff',
                                     border: '1px solid #dbeafe',
                                     borderRadius: '18px',
                                     boxShadow: '0 18px 36px rgba(15, 23, 42, 0.14)',
                                     zIndex: 1000,
-                                    overflow: 'hidden'
+                                    overflow: 'hidden',
+                                    animation: 'fadeIn 0.2s ease-out'
                                 }}
                             >
                                 <div
                                     style={{
                                         padding: '14px 16px',
-                                        background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)',
-                                        borderBottom: '1px solid #e2e8f0',
+                                        background: 'linear-gradient(135deg, #0f172a 0%, #0b4aa6 100%)',
+                                        borderBottom: '1px solid #1e3a8a',
                                         display: 'flex',
                                         justifyContent: 'space-between',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        color: '#ffffff'
                                     }}
                                 >
                                     <div>
-                                        <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>Notifications</h4>
-                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Stay updated with booking and incident activity</div>
+                                        <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+                                            Notifications
+                                        </h4>
+                                        <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>
+                                            Stay updated with activity
+                                        </div>
                                     </div>
                                     {unreadCount > 0 && (
                                         <button
                                             onClick={handleMarkAllRead}
-                                            style={{ background: 'none', border: 'none', color: '#0b4aa6', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                                            style={{
+                                                background: 'rgba(255,255,255,0.15)',
+                                                border: '1px solid rgba(255,255,255,0.3)',
+                                                color: '#ffffff',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                fontSize: '11px',
+                                                padding: '6px 10px',
+                                                borderRadius: '8px',
+                                                backdropFilter: 'blur(4px)'
+                                            }}
                                         >
                                             Mark all read
                                         </button>
@@ -253,36 +314,155 @@ const StudentNavbar = () => {
 
                                 <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                                     {notifications.length === 0 ? (
-                                        <div style={{ padding: '30px', textAlign: 'center', color: '#6c757d', fontSize: '14px' }}>
+                                        <div
+                                            style={{
+                                                padding: '30px',
+                                                textAlign: 'center',
+                                                color: '#6c757d',
+                                                fontSize: '14px'
+                                            }}
+                                        >
                                             No new notifications
                                         </div>
                                     ) : (
                                         notifications.map((notification) => (
                                             <div
                                                 key={notification.id}
-                                                onClick={() => handleNotificationClick(notification.id)}
+                                                onClick={() => handleNotificationClick(notification)}
                                                 style={{
                                                     padding: '15px 16px',
                                                     borderBottom: '1px solid #eef2f7',
                                                     backgroundColor: notification.read ? '#ffffff' : '#f8fbff',
-                                                    cursor: 'pointer'
+                                                    cursor: 'pointer',
+                                                    position: 'relative',
+                                                    transition: 'background 0.15s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = notification.read ? '#ffffff' : '#f8fbff';
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
-                                                    <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        gap: '12px',
+                                                        marginBottom: '6px'
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            fontWeight: 'bold',
+                                                            color: '#0f172a',
+                                                            fontSize: '14px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '8px'
+                                                        }}
+                                                    >
+                                                        {!notification.read && (
+                                                            <span
+                                                                style={{
+                                                                    width: '9px',
+                                                                    height: '9px',
+                                                                    backgroundColor: '#0d6efd',
+                                                                    borderRadius: '50%',
+                                                                    boxShadow: '0 0 0 2px rgba(13,110,253,0.2)'
+                                                                }}
+                                                            />
+                                                        )}
                                                         {notification.title}
                                                     </div>
-                                                    {!notification.read && (
-                                                        <div style={{ width: '9px', height: '9px', backgroundColor: '#0d6efd', borderRadius: '50%', marginTop: '4px' }} />
-                                                    )}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <button
+                                                            onClick={(e) =>
+                                                                handleDeleteNotification(e, notification.id)
+                                                            }
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: '#94a3b8',
+                                                                cursor: 'pointer',
+                                                                padding: '4px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                borderRadius: '6px',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#fee2e2';
+                                                                e.currentTarget.style.color = '#dc2626';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = 'transparent';
+                                                                e.currentTarget.style.color = '#94a3b8';
+                                                            }}
+                                                            title="Delete notification"
+                                                        >
+                                                            <svg
+                                                                width="16"
+                                                                height="16"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <path d="M3 6h18" />
+                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
 
-                                                <div style={{ color: '#475569', fontSize: '13px', marginBottom: '8px', lineHeight: 1.6 }}>
+                                                <div
+                                                    style={{
+                                                        color: '#475569',
+                                                        fontSize: '13px',
+                                                        marginBottom: '8px',
+                                                        lineHeight: 1.6
+                                                    }}
+                                                >
                                                     {notification.message}
                                                 </div>
 
-                                                <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 'bold' }}>
-                                                    {new Date(notification.createdAt).toLocaleString()}
+                                                <div
+                                                    style={{
+                                                        color: '#94a3b8',
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}
+                                                >
+                                                    <span>
+                                                        {new Date(notification.createdAt).toLocaleString([], {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </span>
+                                                    {notification.category && (
+                                                        <span
+                                                            style={{
+                                                                backgroundColor: '#f1f5f9',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                fontSize: '10px',
+                                                                color: '#475569',
+                                                                textTransform: 'uppercase'
+                                                            }}
+                                                        >
+                                                            {notification.category}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))
@@ -320,7 +500,9 @@ const StudentNavbar = () => {
                             {user.name?.charAt(0)?.toUpperCase() || 'U'}
                         </div>
                         <div>
-                            <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>{user.name}</div>
+                            <div style={{ fontWeight: 'bold', color: '#0f172a', fontSize: '14px' }}>
+                                {user.name}
+                            </div>
                             <div style={{ color: '#64748b', fontSize: '12px' }}>Student Portal</div>
                         </div>
                     </div>
@@ -337,7 +519,14 @@ const StudentNavbar = () => {
                             padding: '11px 16px',
                             borderRadius: '14px',
                             cursor: 'pointer',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#fecdd3';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#fff1f2';
                         }}
                     >
                         Logout
@@ -379,5 +568,21 @@ const StudentNavbar = () => {
         </nav>
     );
 };
+
+// Add keyframe animation for ping effect (from second version)
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+    @keyframes ping {
+        75%, 100% {
+            transform: scale(1.2);
+            opacity: 0.8;
+        }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(styleSheet);
 
 export default StudentNavbar;

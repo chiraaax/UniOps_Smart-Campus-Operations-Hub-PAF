@@ -12,6 +12,25 @@ export const getAllIncidents = async () => {
     return response.data;
 };
 
+export const updateIncident = async (id, ticketData, userId) => {
+    const response = await axios.put(`${API_URL}/${id}`, ticketData, {
+        params: { userId }
+    });
+    return response.data;
+};
+
+export const deleteIncident = async (id, userId) => {
+    const response = await axios.delete(`${API_URL}/${id}`, {
+        params: { userId }
+    });
+    return response.data;
+};
+
+export const getTicketsByUser = async (userId) => {
+    const response = await axios.get(`${API_URL}/user/${userId}`);
+    return response.data;
+};
+
 export const getTicketsForTechnician = async (techId) => {
     const response = await axios.get(`${API_URL}/technician/${techId}`);
     return response.data;

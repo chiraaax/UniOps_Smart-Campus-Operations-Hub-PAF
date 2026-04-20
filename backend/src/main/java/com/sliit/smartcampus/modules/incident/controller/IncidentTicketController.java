@@ -64,6 +64,22 @@ public class IncidentTicketController {
         return ResponseEntity.ok(service.updateTicketStatus(id, status, resolutionNotes, technicianId, rejectedReason));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<IncidentTicket> updateTicket(
+            @PathVariable String id,
+            @RequestBody IncidentTicket updatedTicket,
+            @RequestParam String userId) {
+        return ResponseEntity.ok(service.updateTicket(id, updatedTicket, userId));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTicket(
+            @PathVariable String id,
+            @RequestParam String userId) {
+        service.deleteTicket(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/upload-image")
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
         try {

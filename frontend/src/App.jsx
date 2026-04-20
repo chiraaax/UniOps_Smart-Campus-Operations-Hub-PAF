@@ -25,6 +25,7 @@ import FacilityDetails from './Pages/facilities/FacilityDetails';
 
 // --- INCIDENTS ---
 import IncidentList from './Pages/incidents/IncidentList'; 
+import StudentIncidents from './Pages/incidents/StudentIncidents';
 import CreateIncident from './Pages/incidents/CreateIncident'; 
 import TicketDetails from './Pages/incidents/TicketDetails'; 
 
@@ -109,6 +110,7 @@ const AppRoutes = () => {
           
           {/* Protected Route: Only logged-in students can see their bookings */}
           <Route path="/my-bookings" element={user ? <StudentBookings /> : <Navigate to="/login" />} />
+          <Route path="/my-incidents" element={user ? <StudentIncidents /> : <Navigate to="/login" />} />
           
           {/* Protected Incident Routes */}
           <Route path="/incidents" element={user ? <IncidentList /> : <Navigate to="/login" />} />
